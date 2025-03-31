@@ -27,19 +27,23 @@ app.use(
   })
 );
 
+// Parse JSON request bodies
 app.use(express.json());
 
 // Set up rate limiting
+// Using a much higher limit for development
 const apiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20,
+  max: 1000, // increased limit for development
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  message: "Too many requests from this IP, please try again after an hour",
+  message: "Rate limit exceeded from proxy server. Please try again later.",
 });
 
+// Apply rate limiting to all YouTube API requests
 app.use("/api/youtube", apiLimiter);
 
+// Create a proxy middleware for YouTube API requests
 const youtubeProxy = createProxyMiddleware({
   target: "https://www.googleapis.com/youtube/v3",
   changeOrigin: true,
@@ -55,6 +59,7 @@ const youtubeProxy = createProxyMiddleware({
   logLevel: "error",
 });
 
+// Use the proxy middleware for YouTube API endpoints
 app.use("/api/youtube", youtubeProxy);
 
 app.get("/health", (req, res) => {

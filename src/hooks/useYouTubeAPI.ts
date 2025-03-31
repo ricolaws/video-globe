@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import YouTubeService from "../services/youTubeService";
 
-// Video data structure
+// Type definitions
 export interface Video {
   id: string;
   views: string;
@@ -15,7 +15,7 @@ interface YouTubeApiState {
   isLoading: boolean;
   error: Error | null;
   nextPageToken: string | null;
-  quotaExceeded: boolean;
+  fetchFailed: boolean;
 }
 
 interface UseYouTubeAPIProps {
@@ -32,7 +32,7 @@ const useYouTubeAPI = ({ coords, onError }: UseYouTubeAPIProps) => {
     isLoading: false,
     error: null,
     nextPageToken: null,
-    quotaExceeded: false,
+    fetchFailed: false,
   });
 
   // Get the YouTube service instance
@@ -45,7 +45,8 @@ const useYouTubeAPI = ({ coords, onError }: UseYouTubeAPIProps) => {
   // Function to fetch videos based on coordinates
   const fetchVideos = useCallback(
     async (pageToken?: string) => {
-      if (!coords || state.quotaExceeded) {
+      // Don't fetch if there are no coordinates or if a previous fetch failed
+      if (!coords || state.fetchFailed) {
         return;
       }
 
@@ -78,7 +79,8 @@ const useYouTubeAPI = ({ coords, onError }: UseYouTubeAPIProps) => {
           videoIdArray
         );
 
-        const newVideos: Video[] = videoIdArray.map((id, index) => {
+        // Map the results to our Video type
+        const newVideos = videoIdArray.map((id, index) => {
           const detailsItem = detailsResponse.items.find(
             (item) => item.id === id
           );
@@ -99,49 +101,49 @@ const useYouTubeAPI = ({ coords, onError }: UseYouTubeAPIProps) => {
           isLoading: false,
           error: null,
           nextPageToken: searchResponse.nextPageToken || null,
-          quotaExceeded: false,
+          fetchFailed: false,
         }));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         console.error("Error fetching videos:", error);
 
-        // Check if this is a quota exceeded error
-        if (error.message && error.message.includes("429 Too Many Requests")) {
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: new Error(
-              "YouTube API quota exceeded. Please try again later."
-            ),
-            quotaExceeded: true,
-          }));
-        } else {
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: error instanceof Error ? error : new Error(String(error)),
-          }));
-        }
+        // Mark as failed to prevent retry spam
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+          fetchFailed: true,
+        }));
 
         if (onError) onError();
       }
     },
-    [coords, youTubeService, onError, state.quotaExceeded]
+    [coords, youTubeService, onError, state.fetchFailed]
   );
 
-  // Fetch videos when coordinates change
+  // Reset fetchFailed when coordinates change
   useEffect(() => {
-    if (coords && !state.quotaExceeded) {
+    if (coords) {
+      setState((prev) => ({
+        ...prev,
+        fetchFailed: false,
+      }));
+    }
+  }, [coords]);
+
+  // Fetch videos when coordinates change (if not already failed)
+  useEffect(() => {
+    if (coords && !state.fetchFailed) {
       fetchVideos();
     }
-  }, [coords, fetchVideos, state.quotaExceeded]);
+  }, [coords, fetchVideos, state.fetchFailed]);
 
   // Function to load more videos
   const loadMoreVideos = useCallback(() => {
-    if (state.nextPageToken && !state.quotaExceeded) {
+    if (state.nextPageToken && !state.fetchFailed) {
       fetchVideos(state.nextPageToken);
     }
-  }, [state.nextPageToken, fetchVideos, state.quotaExceeded]);
+  }, [state.nextPageToken, fetchVideos, state.fetchFailed]);
 
   return {
     videos: state.videos,
@@ -149,7 +151,6 @@ const useYouTubeAPI = ({ coords, onError }: UseYouTubeAPIProps) => {
     error: state.error,
     hasMore: !!state.nextPageToken,
     loadMoreVideos,
-    quotaExceeded: state.quotaExceeded,
   };
 };
 
