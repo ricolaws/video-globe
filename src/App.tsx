@@ -1,27 +1,23 @@
 import { useState } from "react";
-import viteLogo from "/vite.svg";
+import { Canvas } from "@react-three/fiber";
+import Globe from "./components/Globe";
 import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [coords, setCoords] = useState<[number, number] | null>(null);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <h1>Hello WRLD</h1>
-      </div>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-    </>
+    <div className="app-container">
+      {coords && (
+        <div className="coords-display">
+          Lat: {coords[0].toFixed(2)}°, Long: {coords[1].toFixed(2)}°
+        </div>
+      )}
+
+      <Canvas className="globe-canvas">
+        <Globe setCoords={(newCoords) => setCoords(newCoords)} />
+      </Canvas>
+    </div>
   );
 }
 
