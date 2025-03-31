@@ -1,20 +1,6 @@
 import React, { useState, useEffect } from "react";
 import VideoPlayer from "./VideoPlayer";
-import { Video } from "../hooks/useYouTubeAPI";
-
-interface VideoInfoProps {
-  views: string;
-  location: string | null;
-  title: string;
-}
-
-const VideoInfo: React.FC<VideoInfoProps> = ({ views, location, title }) => (
-  <div className="video-info">
-    <div className="video-title">{title}</div>
-    {location && <div className="video-location">Location: {location}</div>}
-    <div className="video-views">Views: {parseInt(views).toLocaleString()}</div>
-  </div>
-);
+import { Video } from "../services/youTubeService";
 
 interface VideoControllerProps {
   videos: Video[];
@@ -25,7 +11,7 @@ interface VideoControllerProps {
   isLoading: boolean;
 }
 
-const VideoController: React.FC<VideoControllerProps> = ({
+const SimpleVideoController: React.FC<VideoControllerProps> = ({
   videos,
   isOpen,
   onClose,
@@ -34,26 +20,13 @@ const VideoController: React.FC<VideoControllerProps> = ({
   isLoading,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showControls, setShowControls] = useState(false);
 
-  // Reset index when videos change completely (new location)
+  // Reset index when videos change completely
   useEffect(() => {
-    if (
-      videos.length > 0 &&
-      !videos.some((v) => v.id === videos[currentIndex]?.id)
-    ) {
+    if (videos.length > 0 && currentIndex >= videos.length) {
       setCurrentIndex(0);
     }
-  }, [videos, currentIndex]);
-
-  // Show controls after a short delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowControls(true);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  }, [videos.length, currentIndex]);
 
   if (!isOpen || videos.length === 0) {
     return null;
@@ -63,14 +36,9 @@ const VideoController: React.FC<VideoControllerProps> = ({
 
   const handleNext = () => {
     const nextIndex = currentIndex + 1;
-
-    // If we're at the last video and there are more to load
     if (nextIndex >= videos.length && hasMore) {
       onLoadMore();
-      // Stay at current index until new videos are loaded
-    }
-    // If we're not at the end of our current videos
-    else if (nextIndex < videos.length) {
+    } else if (nextIndex < videos.length) {
       setCurrentIndex(nextIndex);
     }
   };
@@ -81,25 +49,13 @@ const VideoController: React.FC<VideoControllerProps> = ({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      handleNext();
-    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      handlePrevious();
-    } else if (e.key === "Escape") {
-      onClose();
-    }
-  };
-
   return (
-    <div className="modal-container" tabIndex={0} onKeyDown={handleKeyDown}>
+    <div className="modal-container">
       <div className="modal-background" onClick={onClose}></div>
       <div className="modal-content">
-        <VideoInfo
-          views={currentVideo.views}
-          location={currentVideo.location}
-          title={currentVideo.title}
-        />
+        <div className="video-info">
+          <div className="video-title">{currentVideo.title}</div>
+        </div>
 
         <VideoPlayer
           videoId={currentVideo.id}
@@ -107,10 +63,7 @@ const VideoController: React.FC<VideoControllerProps> = ({
           title={currentVideo.title}
         />
 
-        <div
-          className="video-controls"
-          style={{ opacity: showControls ? 1 : 0 }}
-        >
+        <div className="video-controls">
           <button
             className="control-button"
             onClick={handlePrevious}
@@ -141,4 +94,4 @@ const VideoController: React.FC<VideoControllerProps> = ({
   );
 };
 
-export default VideoController;
+export default SimpleVideoController;

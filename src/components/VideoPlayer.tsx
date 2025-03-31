@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useRef, useEffect, useState } from "react";
 
@@ -53,6 +52,7 @@ interface YouTubePlayerOptions {
 }
 
 // Enum for YouTube player states
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 enum PlayerState {
   UNSTARTED = -1,
   ENDED = 0,
@@ -112,7 +112,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, onEnded }) => {
   useEffect(() => {
     if (!playerReady || !playerContainerRef.current) return;
 
-    // Destroy previous player instance if it exists
     if (playerInstanceRef.current) {
       playerInstanceRef.current.destroy();
       playerInstanceRef.current = null;

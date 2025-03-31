@@ -2,14 +2,6 @@
 
 An interactive 3D globe application that allows users to discover videos based on geographic locations. Click anywhere on the globe to find videos uploaded from that specific location.
 
-## Features
-
-- Interactive 3D globe powered by Three.js and React Three Fiber
-- Location-based video discovery using YouTube's API
-- API quota management through a proxy server
-- Rate limiting to stay within YouTube API limits
-- Responsive design for various screen sizes
-
 ## Project Structure
 
 ```
@@ -88,8 +80,8 @@ video-globe/
 
 ## Usage
 
-1. Wait for the 3D globe to load
-2. Double-click on any location on the globe
+1. Choose a location on Earth
+2. Double-click on the location
 3. The application will fetch videos from that geographic location
 4. Videos will be displayed in a modal that allows you to navigate through the results
 

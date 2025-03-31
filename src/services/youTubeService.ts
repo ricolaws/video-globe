@@ -1,139 +1,66 @@
-// This service handles interactions with the YouTube API
-// through our proxy server for API key protection and rate limiting
-
-interface YouTubeApiConfig {
-  proxyUrl?: string;
-}
-
-// Define YouTube API response types
-export interface YouTubeSearchResponse {
-  items: Array<{
-    id: {
-      videoId: string;
-    };
-    snippet: {
-      title: string;
-      description: string;
-      publishedAt: string;
-      thumbnails: {
-        default: { url: string; width: number; height: number };
-        medium: { url: string; width: number; height: number };
-        high: { url: string; width: number; height: number };
-      };
-    };
-  }>;
-  nextPageToken?: string;
-  pageInfo?: {
-    totalResults: number;
-    resultsPerPage: number;
-  };
-}
-
-export interface YouTubeVideoDetailsResponse {
-  items: Array<{
-    id: string;
-    statistics: {
-      viewCount: string;
-      likeCount: string;
-      commentCount: string;
-    };
-    contentDetails: {
-      duration: string;
-    };
-    recordingDetails?: {
-      locationDescription?: string;
-      location?: {
-        latitude: number;
-        longitude: number;
-        altitude: number;
-      };
-    };
-  }>;
+export interface Video {
+  id: string;
+  title: string;
+  thumbnail: string;
 }
 
 class YouTubeService {
   private static instance: YouTubeService;
-  private proxyUrl: string;
+  private apiKey: string;
 
-  private constructor(config: YouTubeApiConfig) {
-    this.proxyUrl = config.proxyUrl || "http://localhost:3001/api/youtube";
+  private constructor() {
+    this.apiKey =
+      import.meta.env.VITE_YOUTUBE_API_KEY ||
+      "AIzaSyDZnwNAyGq9WSiRv1563RUaF3FqaDnqi7Y";
   }
 
-  public static getInstance(config?: YouTubeApiConfig): YouTubeService {
-    if (!YouTubeService.instance && config) {
-      YouTubeService.instance = new YouTubeService(config);
+  public static getInstance(): YouTubeService {
+    if (!YouTubeService.instance) {
+      YouTubeService.instance = new YouTubeService();
     }
     return YouTubeService.instance;
   }
 
-  /**
-   * Search for videos based on geographic coordinates
-   */
-  public async searchVideos(
+  public async getVideosByLocation(
     latitude: number,
     longitude: number,
     pageToken?: string
-  ): Promise<YouTubeSearchResponse> {
+  ): Promise<{ videos: Video[]; nextPageToken?: string }> {
     const params = new URLSearchParams({
       part: "snippet",
       type: "video",
-      order: "date",
-      maxResults: "5",
+      maxResults: "15",
       location: `${latitude}, ${longitude}`,
       locationRadius: "100km",
       videoEmbeddable: "true",
-      safeSearch: "none",
+      key: this.apiKey,
     });
 
     if (pageToken) {
       params.append("pageToken", pageToken);
     }
 
-    try {
-      const response = await fetch(
-        `${this.proxyUrl}/search?${params.toString()}`
-      );
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?${params.toString()}`
+    );
 
-      if (!response.ok) {
-        throw new Error(
-          `YouTube API error: ${response.status} ${response.statusText}`
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Error searching videos:", error);
-      throw error;
+    if (!response.ok) {
+      throw new Error(`YouTube API error: ${response.status}`);
     }
-  }
 
-  /**
-   * Get detailed information about specific videos
-   */
-  public async getVideoDetails(
-    videoIds: string[]
-  ): Promise<YouTubeVideoDetailsResponse> {
-    const params = new URLSearchParams({
-      part: "contentDetails,statistics,status,recordingDetails",
-      id: videoIds.join(","),
-    });
+    const data = await response.json();
 
-    try {
-      const response = await fetch(
-        `${this.proxyUrl}/videos?${params.toString()}`
-      );
+    // Map to simplified video objects
+    const videos = data.items.map((item) => ({
+      id: item.id.videoId,
+      title: item.snippet.title,
+      thumbnail: item.snippet.thumbnails.medium?.url || "",
+    }));
 
-      if (!response.ok) {
-        throw new Error(
-          `YouTube API error: ${response.status} ${response.statusText}`
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Error getting video details:", error);
-      throw error;
-    }
+    return {
+      videos,
+      nextPageToken: data.nextPageToken,
+    };
   }
 }
 

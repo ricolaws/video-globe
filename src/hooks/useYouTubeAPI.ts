@@ -1,155 +1,78 @@
-import { useState, useEffect, useCallback } from "react";
-import YouTubeService from "../services/youTubeService";
+// useYouTubeAPI.ts - Ultra simplified hook
+import { useState, useEffect } from "react";
+import YouTubeService, { Video } from "../services/youTubeService";
 
-// Type definitions
-export interface Video {
-  id: string;
-  views: string;
-  location: string | null;
-  title: string;
-  thumbnail: string;
-}
+const useYouTubeAPI = (coords: [number, number] | null) => {
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
 
-interface YouTubeApiState {
-  videos: Video[];
-  isLoading: boolean;
-  error: Error | null;
-  nextPageToken: string | null;
-  fetchFailed: boolean;
-}
+  // Keep track of last fetched coords to avoid duplicate requests
+  const [lastFetched, setLastFetched] = useState<string | null>(null);
 
-interface UseYouTubeAPIProps {
-  coords: [number, number] | null;
-  onError?: () => void;
-}
+  // Fetch videos when coordinates change
+  useEffect(() => {
+    const fetchVideos = async () => {
+      // Don't fetch if there are no coordinates
+      if (!coords) return;
 
-/**
- * Custom hook for fetching YouTube videos based on geographic coordinates
- */
-const useYouTubeAPI = ({ coords, onError }: UseYouTubeAPIProps) => {
-  const [state, setState] = useState<YouTubeApiState>({
-    videos: [],
-    isLoading: false,
-    error: null,
-    nextPageToken: null,
-    fetchFailed: false,
-  });
+      // Don't fetch for the same coordinates twice
+      const coordsString = `${coords[0]},${coords[1]}`;
+      if (coordsString === lastFetched) return;
 
-  // Get the YouTube service instance
-  const youTubeService = YouTubeService.getInstance({
-    proxyUrl:
-      import.meta.env.VITE_YOUTUBE_PROXY_URL ||
-      "http://localhost:3001/api/youtube",
-  });
-
-  // Function to fetch videos based on coordinates
-  const fetchVideos = useCallback(
-    async (pageToken?: string) => {
-      // Don't fetch if there are no coordinates or if a previous fetch failed
-      if (!coords || state.fetchFailed) {
-        return;
-      }
-
-      const [lat, lon] = coords;
-
-      setState((prev) => ({ ...prev, isLoading: true }));
+      setIsLoading(true);
+      setError(null);
 
       try {
-        // Search for videos
-        const searchResponse = await youTubeService.searchVideos(
-          lat,
-          lon,
-          pageToken
-        );
-        const listItems = searchResponse.items;
+        const service = YouTubeService.getInstance();
+        const result = await service.getVideosByLocation(coords[0], coords[1]);
 
-        if (!listItems || listItems.length === 0) {
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: new Error("No videos found for this location"),
-          }));
-          return;
-        }
-
-        const videoIdArray = listItems.map((item) => item.id.videoId);
-
-        // Get additional details for each video
-        const detailsResponse = await youTubeService.getVideoDetails(
-          videoIdArray
-        );
-
-        // Map the results to our Video type
-        const newVideos = videoIdArray.map((id, index) => {
-          const detailsItem = detailsResponse.items.find(
-            (item) => item.id === id
-          );
-          const searchItem = searchResponse.items[index];
-
-          return {
-            id,
-            views: detailsItem?.statistics.viewCount || "0",
-            location:
-              detailsItem?.recordingDetails?.locationDescription || null,
-            title: searchItem?.snippet.title || "",
-            thumbnail: searchItem?.snippet.thumbnails.medium.url || "",
-          };
-        });
-
-        setState((prev) => ({
-          videos: pageToken ? [...prev.videos, ...newVideos] : newVideos,
-          isLoading: false,
-          error: null,
-          nextPageToken: searchResponse.nextPageToken || null,
-          fetchFailed: false,
-        }));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        console.error("Error fetching videos:", error);
-
-        // Mark as failed to prevent retry spam
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: error instanceof Error ? error : new Error(String(error)),
-          fetchFailed: true,
-        }));
-
-        if (onError) onError();
+        setVideos(result.videos);
+        setNextPageToken(result.nextPageToken || null);
+        setLastFetched(coordsString);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error fetching videos");
+        console.error("YouTube API error:", err);
+      } finally {
+        setIsLoading(false);
       }
-    },
-    [coords, youTubeService, onError, state.fetchFailed]
-  );
+    };
 
-  // Reset fetchFailed when coordinates change
-  useEffect(() => {
-    if (coords) {
-      setState((prev) => ({
-        ...prev,
-        fetchFailed: false,
-      }));
-    }
-  }, [coords]);
+    fetchVideos();
+  }, [coords, lastFetched]);
 
-  // Fetch videos when coordinates change (if not already failed)
-  useEffect(() => {
-    if (coords && !state.fetchFailed) {
-      fetchVideos();
-    }
-  }, [coords, fetchVideos, state.fetchFailed]);
+  // Load more videos
+  const loadMoreVideos = async () => {
+    if (!coords || !nextPageToken || isLoading) return;
 
-  // Function to load more videos
-  const loadMoreVideos = useCallback(() => {
-    if (state.nextPageToken && !state.fetchFailed) {
-      fetchVideos(state.nextPageToken);
+    setIsLoading(true);
+
+    try {
+      const service = YouTubeService.getInstance();
+      const result = await service.getVideosByLocation(
+        coords[0],
+        coords[1],
+        nextPageToken
+      );
+
+      setVideos((prev) => [...prev, ...result.videos]);
+      setNextPageToken(result.nextPageToken || null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Error loading more videos"
+      );
+      console.error("YouTube API error:", err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [state.nextPageToken, fetchVideos, state.fetchFailed]);
+  };
 
   return {
-    videos: state.videos,
-    isLoading: state.isLoading,
-    error: state.error,
-    hasMore: !!state.nextPageToken,
+    videos,
+    isLoading,
+    error,
+    hasMore: !!nextPageToken,
     loadMoreVideos,
   };
 };

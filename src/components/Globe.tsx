@@ -14,7 +14,7 @@ export default function Globe({ setCoords }: GlobeProps) {
   const earthRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
   const pointsRef = useRef<THREE.Group>(null);
-  const lightScale = 2.2;
+  const lightScale = 2.7;
 
   // Load textures
   const textures = useTexture({
@@ -130,7 +130,7 @@ export default function Globe({ setCoords }: GlobeProps) {
       <hemisphereLight
         color={0xffffbb}
         groundColor={0x080820}
-        intensity={0.55 * lightScale}
+        intensity={0.4 * lightScale}
       />
 
       {/* Camera controls */}
