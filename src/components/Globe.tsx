@@ -2,14 +2,12 @@ import { useRef, useEffect } from "react";
 import { useFrame, ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, useTexture } from "@react-three/drei";
 import * as THREE from "three";
-
-// Import your assets
 import earthBumpPath from "../assets/8081_earthbump4k.jpg";
 import waterTexturePath from "../assets/waterMap.jpg";
 import specTexturePath from "../assets/earthspec1k.jpg";
 
 interface GlobeProps {
-  setCoords?: (coords: [number, number]) => void;
+  setCoords: (coords: [number, number]) => void;
 }
 
 export default function Globe({ setCoords }: GlobeProps) {
@@ -39,40 +37,33 @@ export default function Globe({ setCoords }: GlobeProps) {
     if (earthRef.current && atmosphereRef.current) {
       const elapsedTime = clock.getElapsedTime();
 
-      // Update objects
       earthRef.current.rotation.y = 0.02 * elapsedTime;
       atmosphereRef.current.rotation.y = -0.08 * elapsedTime;
       atmosphereRef.current.rotation.z = 0.04 * elapsedTime;
     }
   });
 
-  // Double click handler to place markers
   const handleDoubleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
 
     if (!earthRef.current) return;
 
-    // Get point from the event
     const pointOfIntersection = event.point;
     const localPoint = new THREE.Vector3();
 
     // Convert to local coordinate space
     earthRef.current.worldToLocal(localPoint.copy(pointOfIntersection));
 
-    // Create marker
     createPoint(localPoint);
   };
 
-  // Create marker and set coordinates
   const createPoint = (position: THREE.Vector3) => {
     if (!earthRef.current || !pointsRef.current) return;
 
-    // Clear previous points
     while (pointsRef.current.children.length > 0) {
       pointsRef.current.remove(pointsRef.current.children[0]);
     }
 
-    // Create new point marker
     const point = new THREE.Mesh(
       new THREE.SphereGeometry(0.01, 8, 8),
       new THREE.MeshNormalMaterial({ flatShading: false })
@@ -88,13 +79,7 @@ export default function Globe({ setCoords }: GlobeProps) {
     if (lon < -180) {
       lon += 360;
     }
-
-    // Update coordinates
-    if (setCoords) {
-      setCoords([lat, lon]);
-    } else {
-      console.log("Coordinates:", lat, lon);
-    }
+    setCoords([lat, lon]);
   };
 
   return (

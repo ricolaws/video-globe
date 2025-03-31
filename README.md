@@ -1,54 +1,117 @@
-# React + TypeScript + Vite
+# Video Globe App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive 3D globe application that allows users to discover videos based on geographic locations. Click anywhere on the globe to find videos uploaded from that specific location.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Interactive 3D globe powered by Three.js and React Three Fiber
+- Location-based video discovery using YouTube's API
+- API quota management through a proxy server
+- Rate limiting to stay within YouTube API limits
+- Responsive design for various screen sizes
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```
+video-globe/
+├── src/
+│   ├── assets/            # Static assets like textures, images
+│   ├── components/        # React components
+│   │   ├── Globe.tsx      # 3D globe component
+│   │   ├── VideoPlayer.tsx
+│   │   └── VideoController.tsx
+│   ├── hooks/             # Custom React hooks
+│   │   └── useYouTubeAPI.ts
+│   ├── services/          # API and other services
+│   │   └── youTubeService.ts
+│   ├── App.tsx            # Main application component
+│   ├── config.ts          # Configuration file
+│   └── main.tsx           # Entry point
+├── server/                # Proxy server for YouTube API
+│   └── server.ts
+├── .env                   # Environment variables
+└── package.json           # Dependencies and scripts
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+- Node.js 18+ and npm/yarn
+- YouTube Data API v3 key
+
+### Installation
+
+1. Clone the repository
+
+   ```
+   git clone <repository-url>
+   cd video-globe
+   ```
+
+2. Install dependencies
+
+   ```
+   npm install
+   ```
+
+3. Create a `.env` file in the root directory with the following:
+
+   ```
+   VITE_YOUTUBE_API_KEY=your_youtube_api_key
+   VITE_YOUTUBE_PROXY_URL=http://localhost:3001/api/youtube
+   ```
+
+4. Create a `.env` file in the server directory with the following:
+   ```
+   YOUTUBE_API_KEY=your_youtube_api_key
+   PORT=3001
+   CLIENT_URL=http://localhost:5173
+   ```
+
+### Running the application
+
+1. Start the proxy server
+
+   ```
+   cd server
+   npm start
+   ```
+
+2. In another terminal, start the frontend application
+
+   ```
+   npm run dev
+   ```
+
+3. Open the application in your browser at `http://localhost:5173`
+
+## Usage
+
+1. Wait for the 3D globe to load
+2. Double-click on any location on the globe
+3. The application will fetch videos from that geographic location
+4. Videos will be displayed in a modal that allows you to navigate through the results
+
+## Deployment
+
+### Frontend Deployment
+
+The application can be deployed to Vercel, Netlify, or Firebase Hosting:
+
 ```
+npm run build
+```
+
+Then follow the hosting provider's instructions for deploying the `dist` directory.
+
+### Proxy Server Deployment
+
+The proxy server can be deployed to Heroku, Railway, or any other Node.js hosting platform.
+
+Make sure to update the `VITE_YOUTUBE_PROXY_URL` in your frontend environment to point to the deployed server URL.
+
+## Credits
+
+- Globe textures from [NASA Visible Earth](https://visibleearth.nasa.gov/)
+- Built with React, TypeScript, Three.js, and React Three Fiber
