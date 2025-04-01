@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import VideoPlayer from "./VideoPlayer";
 import { Video } from "../services/youTubeService";
+import "./VideoComponents.css";
 
 interface VideoControllerProps {
   videos: Video[];
@@ -11,15 +12,30 @@ interface VideoControllerProps {
   isLoading: boolean;
 }
 
-const SimpleVideoController: React.FC<VideoControllerProps> = ({
+const VideoController: React.FC<VideoControllerProps> = ({
   videos,
   isOpen,
   onClose,
   onLoadMore,
   hasMore,
-  isLoading,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Define callback functions to prevent dependency cycles in useEffect
+  const handleNext = useCallback(() => {
+    const nextIndex = currentIndex + 1;
+    if (nextIndex >= videos.length && hasMore) {
+      onLoadMore();
+    } else if (nextIndex < videos.length) {
+      setCurrentIndex(nextIndex);
+    }
+  }, [currentIndex, videos.length, hasMore, onLoadMore]);
+
+  const handlePrevious = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  }, [currentIndex]);
 
   // Reset index when videos change completely
   useEffect(() => {
@@ -28,30 +44,34 @@ const SimpleVideoController: React.FC<VideoControllerProps> = ({
     }
   }, [videos.length, currentIndex]);
 
+  // Key navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      if (e.key === "Escape") {
+        onClose();
+      } else if (e.key === "ArrowLeft") {
+        handlePrevious();
+      } else if (e.key === "ArrowRight") {
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleNext, handlePrevious, onClose]);
+
   if (!isOpen || videos.length === 0) {
     return null;
   }
 
   const currentVideo = videos[currentIndex];
 
-  const handleNext = () => {
-    const nextIndex = currentIndex + 1;
-    if (nextIndex >= videos.length && hasMore) {
-      onLoadMore();
-    } else if (nextIndex < videos.length) {
-      setCurrentIndex(nextIndex);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
   return (
     <div className="modal-container">
       <div className="modal-background" onClick={onClose}></div>
+
       <div className="modal-content">
         <div className="video-info">
           <div className="video-title">{currentVideo.title}</div>
@@ -65,11 +85,12 @@ const SimpleVideoController: React.FC<VideoControllerProps> = ({
 
         <div className="video-controls">
           <button
-            className="control-button"
+            className="arrow-button left-arrow"
             onClick={handlePrevious}
             disabled={currentIndex === 0}
+            aria-label="Previous video"
           >
-            Previous
+            ←
           </button>
 
           <button className="control-button" onClick={onClose}>
@@ -77,11 +98,12 @@ const SimpleVideoController: React.FC<VideoControllerProps> = ({
           </button>
 
           <button
-            className="control-button"
+            className="arrow-button right-arrow"
             onClick={handleNext}
             disabled={currentIndex === videos.length - 1 && !hasMore}
+            aria-label="Next video"
           >
-            {isLoading ? "Loading..." : "Next"}
+            →
           </button>
         </div>
 
@@ -94,4 +116,4 @@ const SimpleVideoController: React.FC<VideoControllerProps> = ({
   );
 };
 
-export default SimpleVideoController;
+export default VideoController;

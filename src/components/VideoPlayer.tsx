@@ -126,7 +126,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, onEnded }) => {
     playerContainerRef.current.innerHTML = "";
     playerContainerRef.current.appendChild(playerElement);
 
-    // Initialize player
+    // Initialize player with better quality settings
     playerInstanceRef.current = new window.YT.Player(playerId, {
       videoId,
       playerVars: {
@@ -134,6 +134,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, onEnded }) => {
         modestbranding: 1,
         rel: 0,
         origin: window.location.origin,
+        enablejsapi: 1,
+        playsinline: 1,
+        controls: 1,
+        fs: 1, // Enable fullscreen button
+        iv_load_policy: 3, // Hide video annotations
+        cc_load_policy: 0, // Don't show captions by default
+        quality: "hd720", // Attempt to load in HD when possible
       },
       events: {
         onStateChange: (event: YouTubeEvent) => {
