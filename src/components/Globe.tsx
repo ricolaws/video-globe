@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { useFrame, ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, useTexture } from "@react-three/drei";
 import * as THREE from "three";
-import earthBumpPath from "../assets/8081_earthbump4k.jpg";
+import earthBumpPath from "../assets/8081_earthbump10k.jpg";
 import waterTexturePath from "../assets/waterMap.jpg";
 import specTexturePath from "../assets/earthspec1k.jpg";
 
@@ -65,8 +65,8 @@ export default function Globe({ setCoords }: GlobeProps) {
     }
 
     const point = new THREE.Mesh(
-      new THREE.SphereGeometry(0.01, 8, 8),
-      new THREE.MeshNormalMaterial({ flatShading: true })
+      new THREE.SphereGeometry(0.008, 8, 8),
+      new THREE.MeshNormalMaterial({ flatShading: false })
     );
     point.position.copy(position);
     pointsRef.current.add(point);
@@ -95,8 +95,8 @@ export default function Globe({ setCoords }: GlobeProps) {
           clearcoat={1}
           clearcoatRoughness={0.3}
           reflectivity={0.5}
-          metalness={1.5}
-          roughness={0.7}
+          metalness={1.4}
+          roughness={0.5}
           color={new THREE.Color(0xf0deff)}
         />
       </mesh>
@@ -107,7 +107,7 @@ export default function Globe({ setCoords }: GlobeProps) {
         <meshToonMaterial
           color={new THREE.Color(0xeeeeff)}
           transparent={true}
-          opacity={0.12}
+          opacity={0.1}
           map={textures.waterMap}
         />
       </mesh>
@@ -130,13 +130,13 @@ export default function Globe({ setCoords }: GlobeProps) {
       />
       <hemisphereLight
         color={0xffffbb}
-        groundColor={0x080820}
-        intensity={0.4 * lightScale}
+        groundColor={0x0b2880}
+        intensity={0.5 * lightScale}
       />
 
       {/* Camera controls */}
       <OrbitControls
-        minDistance={1.3}
+        minDistance={1.2}
         maxDistance={3}
         zoomSpeed={0.2}
         panSpeed={0.2}
