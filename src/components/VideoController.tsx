@@ -18,6 +18,7 @@ const VideoController: React.FC<VideoControllerProps> = ({
   onClose,
   onLoadMore,
   hasMore,
+  isLoading,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -44,24 +45,6 @@ const VideoController: React.FC<VideoControllerProps> = ({
     }
   }, [videos.length, currentIndex]);
 
-  // Key navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      if (e.key === "Escape") {
-        onClose();
-      } else if (e.key === "ArrowLeft") {
-        handlePrevious();
-      } else if (e.key === "ArrowRight") {
-        handleNext();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, handleNext, handlePrevious, onClose]);
-
   if (!isOpen || videos.length === 0) {
     return null;
   }
@@ -72,8 +55,9 @@ const VideoController: React.FC<VideoControllerProps> = ({
     <div className="modal-container">
       <div className="modal-background" onClick={onClose}></div>
 
-      <div className="modal-content">
-        <div className="video-info">
+      <div className="floating-modal-content">
+        {/* Title without background */}
+        <div className="floating-video-title">
           <div className="video-title">{currentVideo.title}</div>
         </div>
 
@@ -83,7 +67,8 @@ const VideoController: React.FC<VideoControllerProps> = ({
           title={currentVideo.title}
         />
 
-        <div className="video-controls">
+        {/* Controls placed below the video */}
+        <div className="bottom-video-controls">
           <button
             className="arrow-button left-arrow"
             onClick={handlePrevious}
@@ -91,10 +76,6 @@ const VideoController: React.FC<VideoControllerProps> = ({
             aria-label="Previous video"
           >
             ←
-          </button>
-
-          <button className="control-button" onClick={onClose}>
-            Close
           </button>
 
           <button
@@ -105,11 +86,6 @@ const VideoController: React.FC<VideoControllerProps> = ({
           >
             →
           </button>
-        </div>
-
-        <div className="video-progress">
-          {currentIndex + 1} of {videos.length}
-          {hasMore ? "+" : ""}
         </div>
       </div>
     </div>

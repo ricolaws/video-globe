@@ -18,22 +18,21 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
 }
 
-.modal-content {
+/* Floating Modal Content - No visible background */
+.floating-modal-content {
   position: relative;
   width: 90%;
   max-width: 1200px;
   max-height: 90vh;
-  background-color: #0e0e20;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  background-color: transparent;
   z-index: 1001;
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 /* Video Player Styles */
@@ -41,7 +40,11 @@
   width: 100%;
   padding-top: 56.25%; /* 16:9 Aspect Ratio */
   position: relative;
-  background-color: #000;
+  background-color: transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px; /* Add space for the controls below */
 }
 
 .video-player-wrapper {
@@ -59,6 +62,7 @@
   width: 100% !important;
   height: 100% !important;
   display: block;
+  border-radius: 4px;
 }
 
 .video-player-loading {
@@ -70,7 +74,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
 }
 
 .loading-spinner {
@@ -88,52 +93,41 @@
   }
 }
 
-/* Video Info Styles */
-.video-info {
-  padding: 12px 16px;
-  background-color: rgba(25, 25, 45, 0.95);
+/* Floating Video Title Styles - Appears above video */
+.floating-video-title {
+  position: absolute;
+  top: -60px;
+  left: 0;
+  width: 100%;
+  padding: 16px 20px;
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  z-index: 10;
+  border-radius: 8px 8px 0 0;
+  text-align: center;
 }
 
 .video-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  margin-bottom: 8px;
-  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   overflow: hidden;
   text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  max-height: 54px;
 }
 
-/* Video Controls Styles */
-.video-controls {
+/* Bottom Video Controls - Placed below the video */
+.bottom-video-controls {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 12px 16px;
-  background-color: rgba(25, 25, 45, 0.95);
-}
-
-.control-button {
-  background-color: #3366cc;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.control-button:hover {
-  background-color: #264d99;
-}
-
-.control-button:disabled {
-  background-color: #555;
-  cursor: not-allowed;
-  opacity: 0.7;
+  gap: 20px;
+  padding: 10px 0;
+  margin-top: 10px;
 }
 
 /* Arrow Buttons */
@@ -141,43 +135,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(51, 102, 204, 0.9);
+  background-color: rgba(0, 0, 0, 0.6);
   color: white;
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.8);
   border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  font-size: 24px;
+  width: 54px;
+  height: 54px;
+  font-size: 28px;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .arrow-button:hover {
-  background-color: #264d99;
-  transform: scale(1.05);
+  background-color: rgba(51, 102, 204, 0.8);
+  transform: scale(1.1);
 }
 
 .arrow-button:disabled {
-  background-color: #555;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 .left-arrow,
 .right-arrow {
   padding: 0;
   line-height: 1;
-}
-
-/* Video Progress Indicator */
-.video-progress {
-  text-align: center;
-  padding: 8px 16px;
-  background-color: rgba(25, 25, 45, 0.95);
-  color: #aaa;
-  font-size: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 /* Loading Indicator */
@@ -212,23 +198,24 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .modal-content {
+  .floating-modal-content {
     width: 95%;
-    max-height: 95vh;
+  }
+
+  .floating-video-title {
+    top: -50px;
+    padding: 12px 16px;
   }
 
   .video-title {
     font-size: 14px;
-  }
-
-  .control-button {
-    padding: 6px 12px;
-    font-size: 12px;
+    -webkit-line-clamp: 1;
+    max-height: 20px;
   }
 
   .arrow-button {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     font-size: 20px;
   }
 }

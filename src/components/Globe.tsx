@@ -14,7 +14,7 @@ export default function Globe({ setCoords }: GlobeProps) {
   const earthRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
   const pointsRef = useRef<THREE.Group>(null);
-  const lightScale = 2.7;
+  const lightScale = 3.8;
 
   // Load textures
   const textures = useTexture({
@@ -66,7 +66,7 @@ export default function Globe({ setCoords }: GlobeProps) {
 
     const point = new THREE.Mesh(
       new THREE.SphereGeometry(0.01, 8, 8),
-      new THREE.MeshNormalMaterial({ flatShading: false })
+      new THREE.MeshNormalMaterial({ flatShading: true })
     );
     point.position.copy(position);
     pointsRef.current.add(point);
@@ -94,9 +94,10 @@ export default function Globe({ setCoords }: GlobeProps) {
           envMap={textures.specMap}
           clearcoat={1}
           clearcoatRoughness={0.3}
-          reflectivity={1}
-          metalness={0.6}
-          roughness={0.3}
+          reflectivity={0.5}
+          metalness={1.5}
+          roughness={0.7}
+          color={new THREE.Color(0xf0deff)}
         />
       </mesh>
 
@@ -135,8 +136,8 @@ export default function Globe({ setCoords }: GlobeProps) {
 
       {/* Camera controls */}
       <OrbitControls
-        minDistance={1.25}
-        maxDistance={3.5}
+        minDistance={1.3}
+        maxDistance={3}
         zoomSpeed={0.2}
         panSpeed={0.2}
         enableDamping
