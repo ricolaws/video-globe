@@ -18,7 +18,6 @@ const VideoController: React.FC<VideoControllerProps> = ({
   onClose,
   onLoadMore,
   hasMore,
-  isLoading,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 

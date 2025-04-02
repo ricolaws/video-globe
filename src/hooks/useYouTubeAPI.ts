@@ -1,4 +1,3 @@
-// useYouTubeAPI.ts - Ultra simplified hook
 import { useState, useEffect } from "react";
 import YouTubeService, { Video } from "../services/youTubeService";
 

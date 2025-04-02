@@ -1,10 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { createProxyMiddleware } from "http-proxy-middleware";
 import rateLimit from "express-rate-limit";
+import mockResponse from "./mockYouTubeResponse.js";
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
@@ -18,7 +17,7 @@ if (!YOUTUBE_API_KEY) {
   process.exit(1);
 }
 
-// Enable CORS for your front-end application
+// Enable CORS
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
@@ -27,43 +26,68 @@ app.use(
   })
 );
 
-// Parse JSON request bodies
 app.use(express.json());
 
-// Set up rate limiting
-// Using a much higher limit for development
-const apiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 1000, // increased limit for development
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  message: "Rate limit exceeded from proxy server. Please try again later.",
+const youtubeApiLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many requests, please try again later.",
 });
-
-// Apply rate limiting to all YouTube API requests
-app.use("/api/youtube", apiLimiter);
-
-// Create a proxy middleware for YouTube API requests
-const youtubeProxy = createProxyMiddleware({
-  target: "https://www.googleapis.com/youtube/v3",
-  changeOrigin: true,
-  pathRewrite: {
-    "^/api/youtube": "", // Remove the /api/youtube prefix
-  },
-  onProxyReq: (proxyReq) => {
-    // Add the API key to all requests
-    const url = new URL(proxyReq.path, "https://www.googleapis.com");
-    url.searchParams.append("key", YOUTUBE_API_KEY);
-    proxyReq.path = url.pathname + url.search;
-  },
-  logLevel: "error",
-});
-
-// Use the proxy middleware for YouTube API endpoints
-app.use("/api/youtube", youtubeProxy);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK" });
+});
+
+// YouTube API proxy endpoint with rate limiting
+app.get("/api/youtube/search", youtubeApiLimiter, async (req, res) => {
+  try {
+    console.log("Received YouTube API request:", req.query);
+
+    const queryParams = new URLSearchParams(req.query);
+
+    queryParams.append("key", YOUTUBE_API_KEY);
+
+    // Log the request (without showing the full API key)
+    const apiKeyPrefix = YOUTUBE_API_KEY.substring(0, 4);
+    console.log(`Making request to YouTube API with key: ${apiKeyPrefix}...`);
+
+    // Make the request to YouTube API
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?${queryParams.toString()}`
+    );
+
+    if (!response.ok) {
+      console.error("YouTube API error:", response.status);
+      return res.status(response.status).json({
+        error: "YouTube API error",
+        status: response.status,
+      });
+    }
+
+    const data = await response.json();
+    console.log(
+      `Successfully retrieved ${
+        data.items?.length || 0
+      } results from YouTube API`
+    );
+
+    res.json(data);
+  } catch (error) {
+    console.error("Proxy error:", error);
+    res.status(500).json({ error: "Proxy server error" });
+  }
+});
+
+// Fake data endpoint - returns the mock response
+app.get("/api/youtube/fake/search", (req, res) => {
+  console.log("Serving fake YouTube data");
+
+  // Add a slight delay
+  setTimeout(() => {
+    res.json(mockResponse);
+  }, 200);
 });
 
 // Start the server
