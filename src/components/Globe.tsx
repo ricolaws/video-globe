@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import { useFrame, ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, useTexture } from "@react-three/drei";
 import * as THREE from "three";
+import { useControls, folder } from "leva";
 import earthBumpPath from "../assets/8081_earthbump10k.jpg";
 import waterTexturePath from "../assets/waterMap.jpg";
 import specTexturePath from "../assets/earthspec1k.jpg";
@@ -14,7 +15,74 @@ export default function Globe({ setCoords }: GlobeProps) {
   const earthRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
   const pointsRef = useRef<THREE.Group>(null);
-  const lightScale = 3.8;
+
+  // Set up Leva controls for lights
+  const controls = useControls({
+    Lights: folder({
+      // Global light settings
+      globalLightScale: {
+        value: 4.0,
+        min: 0,
+        max: 10,
+        step: 0.1,
+        label: "Global Intensity",
+      },
+
+      light1: folder({
+        light1Color: { value: "#ff6000" },
+        light1Intensity: { value: 0.36, min: 0, max: 1, step: 0.01 },
+        light1Position: {
+          value: [7, 2, 17],
+          step: 0.5,
+          joystick: "invertY",
+        },
+      }),
+
+      light2: folder({
+        light2Color: { value: "#71d5c1" },
+        light2Intensity: { value: 0.3, min: 0, max: 1, step: 0.01 },
+        light2Position: {
+          value: [-9.5, 9, -2.52],
+          step: 0.5,
+          joystick: "invertY",
+        },
+      }),
+
+      light3: folder({
+        light3Color: { value: "#6c4d6f" },
+        light3Intensity: { value: 0.6, min: 0, max: 1, step: 0.01 },
+        light3Position: {
+          value: [-1.95, -18.24, -3.5],
+          step: 0.5,
+          joystick: "invertY",
+        },
+      }),
+
+      // Hemisphere light
+      hemisphereLight: folder({
+        skyColor: { value: "#dedcc2" },
+        groundColor: { value: "#1d0b03" },
+        hemisphereLightIntensity: { value: 0.36, min: 0, max: 1, step: 0.01 },
+      }),
+    }),
+
+    // Earth material controls
+    Material: folder({
+      bumpScale: { value: 999, min: 1, max: 2000, step: 10 },
+      clearcoat: { value: 0.9, min: 0, max: 1, step: 0.01 },
+      clearcoatRoughness: { value: 0.2, min: 0, max: 1, step: 0.01 },
+      metalness: { value: 0.27, min: 0, max: 1, step: 0.01 },
+      roughness: { value: 0.8, min: 0, max: 1, step: 0.01 },
+      earthColor: { value: "#d9d9d9" },
+    }),
+
+    // Atmosphere controls
+    Atmosphere: folder({
+      atmosphereOpacity: { value: 0.12, min: 0, max: 1, step: 0.01 },
+      atmosphereScale: { value: 1.02, min: 1, max: 1.2, step: 0.01 },
+      atmosphereColor: { value: "#cce6ea" },
+    }),
+  });
 
   // Load textures
   const textures = useTexture({
@@ -90,58 +158,63 @@ export default function Globe({ setCoords }: GlobeProps) {
         <meshPhysicalMaterial
           flatShading={false}
           bumpMap={textures.bumpMap}
-          bumpScale={999}
-          envMap={textures.specMap}
-          clearcoat={1}
-          clearcoatRoughness={0.3}
-          reflectivity={0.5}
-          metalness={1.4}
-          roughness={0.5}
-          color={new THREE.Color(0xf0deff)}
+          bumpScale={controls.bumpScale}
+          // envMap={textures.specMap}
+          clearcoat={controls.clearcoat}
+          clearcoatRoughness={controls.clearcoatRoughness}
+          metalness={controls.metalness}
+          roughness={controls.roughness}
+          color={new THREE.Color(controls.earthColor)}
+          // specularColorMap={textures.bumpMap}
+          specularColor={"#fbb0c5"}
+          specularIntensityMap={textures.specMap}
+          specularIntensity={444}
         />
       </mesh>
 
       {/* Atmosphere layer */}
-      <mesh ref={atmosphereRef} scale={1.05}>
+      <mesh ref={atmosphereRef} scale={controls.atmosphereScale}>
         <sphereGeometry args={[1, 32, 32]} />
         <meshToonMaterial
-          color={new THREE.Color(0xeeeeff)}
+          color={new THREE.Color(controls.atmosphereColor)}
           transparent={true}
-          opacity={0.1}
+          opacity={controls.atmosphereOpacity}
           map={textures.waterMap}
         />
       </mesh>
 
       {/* Lights */}
       <pointLight
-        position={[7, 2, 17]}
-        color={0xff6000}
-        intensity={0.25 * lightScale}
+        position={controls.light1Position}
+        color={controls.light1Color}
+        intensity={controls.light1Intensity * controls.globalLightScale}
       />
       <pointLight
-        position={[-9.5, 9, -2.52]}
-        color={0x22fed0}
-        intensity={0.15 * lightScale}
+        position={controls.light2Position}
+        color={controls.light2Color}
+        intensity={controls.light2Intensity * controls.globalLightScale}
       />
       <pointLight
-        position={[-1.95, -18.24, -10.53]}
-        color={0x98d0d8}
-        intensity={0.22 * lightScale}
+        position={controls.light3Position}
+        color={controls.light3Color}
+        intensity={controls.light3Intensity * controls.globalLightScale}
       />
       <hemisphereLight
-        color={0xffffbb}
-        groundColor={0x0b2880}
-        intensity={0.5 * lightScale}
+        color={controls.skyColor}
+        groundColor={controls.groundColor}
+        intensity={
+          controls.hemisphereLightIntensity * controls.globalLightScale
+        }
       />
 
       {/* Camera controls */}
       <OrbitControls
         minDistance={1.2}
-        maxDistance={3}
-        zoomSpeed={0.2}
+        maxDistance={2.5}
+        zoomSpeed={0.1}
         panSpeed={0.2}
         enableDamping
-        dampingFactor={0.08}
+        dampingFactor={0.06}
       />
     </group>
   );
