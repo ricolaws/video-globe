@@ -1,22 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-// import Globe from "./components/Globe";
+import GlobeSelector from "./components/GlobeSelector";
 import VideoController from "./components/VideoController";
 import useYouTubeAPI from "./hooks/useYouTubeAPI";
 import "./App.css";
-import Globe2 from "./components/Globe2";
 
 function App() {
   const [coords, setCoords] = useState<[number, number] | null>(null);
   const [showVideo, setShowVideo] = useState(false);
-  // Track if user explicitly closed the modal
+  const [useRealisticGlobe, setUseRealisticGlobe] = useState(true);
   const userClosedModal = useRef(false);
 
   const { videos, isLoading, error, hasMore, loadMoreVideos } =
     useYouTubeAPI(coords);
 
   const handleGlobeClick = (newCoords: [number, number]) => {
-    // When user clicks globe, reset the user closed state
     userClosedModal.current = false;
     setCoords(newCoords);
   };
@@ -34,6 +32,10 @@ function App() {
     setShowVideo(false);
   };
 
+  const toggleGlobeStyle = () => {
+    setUseRealisticGlobe(!useRealisticGlobe);
+  };
+
   return (
     <div className="app-container">
       {coords && (
@@ -42,11 +44,33 @@ function App() {
         </div>
       )}
 
+      {/* Toggle Button for Globe Style - Outside Canvas */}
+      <button
+        className="globe-toggle-button"
+        onClick={toggleGlobeStyle}
+        style={{
+          position: "absolute",
+          top: "70px",
+          left: "20px",
+          zIndex: 191,
+          padding: "8px 12px",
+          backgroundColor: "rgba(0, 0, 0, 0.7)",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+        }}
+      >
+        Switch to {useRealisticGlobe ? "Simple" : "Realistic"} Globe
+      </button>
+
       {isLoading && <div className="loading-indicator">Loading videos...</div>}
       {error && <div className="error-message">{error}</div>}
 
       <Canvas className="globe-canvas">
-        <Globe2 setCoords={handleGlobeClick} />
+        <GlobeSelector
+          setCoords={handleGlobeClick}
+          useRealistic={useRealisticGlobe}
+        />
       </Canvas>
 
       <VideoController
