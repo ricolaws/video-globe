@@ -8,13 +8,33 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
-if (!YOUTUBE_API_KEY) {
+// Load keys from environment
+const API_KEYS = process.env.YOUTUBE_API_KEYS
+  ? process.env.YOUTUBE_API_KEYS.split(",").filter(
+      (key) => key.trim().length > 0
+    )
+  : process.env.YOUTUBE_API_KEY
+  ? [process.env.YOUTUBE_API_KEY]
+  : [];
+
+if (API_KEYS.length === 0) {
   console.error(
-    "YouTube API key is required. Set YOUTUBE_API_KEY in your .env file."
+    "No YouTube API keys found. Set YOUTUBE_API_KEY or YOUTUBE_API_KEYS in your .env file."
   );
   process.exit(1);
+}
+
+console.log(`Loaded ${API_KEYS.length} YouTube API key(s)`);
+
+// Set up key rotation
+let currentKeyIndex = 0;
+
+// Function to get the next API key in rotation
+function getNextApiKey() {
+  const key = API_KEYS[currentKeyIndex];
+  currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+  return key;
 }
 
 // Enable CORS
@@ -47,11 +67,17 @@ app.get("/api/youtube/search", youtubeApiLimiter, async (req, res) => {
 
     const queryParams = new URLSearchParams(req.query);
 
-    queryParams.append("key", YOUTUBE_API_KEY);
+    // Add the API key using rotation
+    const apiKey = getNextApiKey();
+    queryParams.append("key", apiKey);
 
-    // Log the request (without showing the full API key)
-    const apiKeyPrefix = YOUTUBE_API_KEY.substring(0, 4);
-    console.log(`Making request to YouTube API with key: ${apiKeyPrefix}...`);
+    // Log which key is being used (first 4 chars only)
+    const keyIdentifier = `${apiKey.substring(0, 4)}...`;
+    console.log(
+      `Using API key ${keyIdentifier} (${currentKeyIndex + 1}/${
+        API_KEYS.length
+      })`
+    );
 
     // Make the request to YouTube API
     const response = await fetch(
