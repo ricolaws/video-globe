@@ -1,5 +1,6 @@
 :root {
   --background-color: #0e0e13;
+  --blue-screen: #0041b2;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -39,14 +40,71 @@ html {
   height: 100% !important;
 }
 
-.coords-display {
-  position: absolute;
+.search-info-container {
+  position: fixed;
   top: 20px;
   left: 20px;
-  padding: 8px 12px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  border-radius: 4px;
+  z-index: 1100;
+  max-width: 360px;
+}
+
+.search-info-card {
+  background-color: var(--blue-screen);
+  color: #ffffa1;
+  padding: 12px 16px;
   font-family: monospace;
-  z-index: 10;
+}
+
+.search-info-coords {
+  font-family: monospace;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.search-info-location {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.2rem;
+}
+
+.search-info-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.search-info-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.search-info-label {
+  margin-right: 8px;
+}
+
+.search-info-value {
+  font-weight: 500;
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .search-info-container {
+    top: 10px;
+    left: 10px;
+    max-width: 240px;
+  }
+
+  .search-info-card {
+    padding: 8px 12px;
+  }
+
+  .search-info-coords,
+  .search-info-location,
+  .search-info-item {
+    font-size: 12px;
+  }
 }

@@ -10,6 +10,8 @@ interface VideoControllerProps {
   onLoadMore: () => void;
   hasMore: boolean;
   isLoading: boolean;
+  onVideoChange?: (index: number) => void;
+  initialIndex?: number;
 }
 
 const VideoController: React.FC<VideoControllerProps> = ({
@@ -18,31 +20,49 @@ const VideoController: React.FC<VideoControllerProps> = ({
   onClose,
   onLoadMore,
   hasMore,
+  onVideoChange = () => {},
+  initialIndex = 0,
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
-  // Define callback functions to prevent dependency cycles in useEffect
+  useEffect(() => {
+    setCurrentIndex(initialIndex);
+  }, [initialIndex, videos]);
+
+  // Update parent component when current index changes due to prev/next buttons
+  const updateParentIndex = useCallback(
+    (index: number) => {
+      onVideoChange(index);
+    },
+    [onVideoChange]
+  );
+
   const handleNext = useCallback(() => {
     const nextIndex = currentIndex + 1;
     if (nextIndex >= videos.length && hasMore) {
       onLoadMore();
     } else if (nextIndex < videos.length) {
       setCurrentIndex(nextIndex);
+      updateParentIndex(nextIndex);
     }
-  }, [currentIndex, videos.length, hasMore, onLoadMore]);
+  }, [currentIndex, videos.length, hasMore, onLoadMore, updateParentIndex]);
 
   const handlePrevious = useCallback(() => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      const prevIndex = currentIndex - 1;
+      setCurrentIndex(prevIndex);
+      updateParentIndex(prevIndex);
     }
-  }, [currentIndex]);
+  }, [currentIndex, updateParentIndex]);
 
   // Reset index when videos change completely
   useEffect(() => {
     if (videos.length > 0 && currentIndex >= videos.length) {
-      setCurrentIndex(0);
+      const newIndex = 0;
+      setCurrentIndex(newIndex);
+      updateParentIndex(newIndex);
     }
-  }, [videos.length, currentIndex]);
+  }, [videos.length, currentIndex, updateParentIndex]);
 
   if (!isOpen || videos.length === 0) {
     return null;
@@ -56,9 +76,9 @@ const VideoController: React.FC<VideoControllerProps> = ({
 
       <div className="floating-modal-content">
         {/* Title without background */}
-        <div className="floating-video-title">
+        {/* <div className="floating-video-title">
           <div className="video-title">{currentVideo.title}</div>
-        </div>
+        </div> */}
 
         <VideoPlayer
           videoId={currentVideo.id}
