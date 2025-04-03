@@ -49,12 +49,6 @@ class YouTubeService {
       ? `${this.proxyUrl}/fake/search`
       : `${this.proxyUrl}/search`;
 
-    console.log(
-      `Using ${
-        this.useFakeData ? "fake" : "real"
-      } data for location: ${latitude}, ${longitude}`
-    );
-
     // Set up parameters
     const params = new URLSearchParams();
 
@@ -62,9 +56,10 @@ class YouTubeService {
     if (!this.useFakeData) {
       params.append("part", "snippet");
       params.append("type", "video");
+      params.append("order", "date");
       params.append("maxResults", "15");
       params.append("location", `${latitude}, ${longitude}`);
-      params.append("locationRadius", "100km");
+      params.append("locationRadius", "50km");
       params.append("videoEmbeddable", "true");
 
       if (pageToken) {
