@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import Globe from "./components/Globe";
+// import Globe from "./components/Globe";
 import VideoController from "./components/VideoController";
 import useYouTubeAPI from "./hooks/useYouTubeAPI";
 import "./App.css";
+import Globe2 from "./components/Globe2";
 
 function App() {
   const [coords, setCoords] = useState<[number, number] | null>(null);
@@ -45,7 +46,7 @@ function App() {
       {error && <div className="error-message">{error}</div>}
 
       <Canvas className="globe-canvas">
-        <Globe setCoords={handleGlobeClick} />
+        <Globe2 setCoords={handleGlobeClick} />
       </Canvas>
 
       <VideoController
