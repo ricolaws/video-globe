@@ -63,14 +63,13 @@ function App() {
         onClick={toggleGlobeStyle}
         style={{
           position: "absolute",
-          top: "70px",
-          left: "20px",
+          top: "20px",
+          right: "20px",
           zIndex: 191,
           padding: "8px 12px",
-          backgroundColor: "rgba(0, 0, 0, 0.7)",
+          backgroundColor: "rgba(0, 0, 0, 0)",
           color: "white",
           border: "none",
-          borderRadius: "4px",
         }}
       >
         Switch to {useRealisticGlobe ? "Simple" : "Realistic"} Globe
