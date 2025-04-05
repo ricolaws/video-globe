@@ -81,6 +81,7 @@ const VideoController: React.FC<VideoControllerProps> = ({
         </div> */}
 
         <VideoPlayer
+          video={currentVideo}
           videoId={currentVideo.id}
           onEnded={handleNext}
           title={currentVideo.title}

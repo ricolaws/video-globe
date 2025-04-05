@@ -1,10 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useRef, useEffect, useState } from "react";
+import { Video } from "../services/youTubeService";
 
 interface VideoPlayerProps {
   videoId: string;
   onEnded?: () => void;
   title?: string;
+  video: Video;
 }
 
 // Define proper YouTube Player API types
@@ -24,6 +27,7 @@ interface YouTubePlayer {
   getPlayerState: () => number;
   getCurrentTime: () => number;
   getDuration: () => number;
+  getIframe: () => HTMLIFrameElement;
 }
 
 interface YouTubePlayerOptions {
@@ -52,7 +56,6 @@ interface YouTubePlayerOptions {
 }
 
 // Enum for YouTube player states
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 enum PlayerState {
   UNSTARTED = -1,
   ENDED = 0,
@@ -76,10 +79,65 @@ declare global {
   }
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, onEnded }) => {
+// Define aspect ratio types
+type AspectRatioType = "landscape" | "portrait" | "square";
+
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  videoId,
+  onEnded,
+  video,
+}) => {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const [playerReady, setPlayerReady] = useState(false);
   const playerInstanceRef = useRef<YouTubePlayer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Determine aspect ratio type from video data
+  const getAspectRatioType = (): AspectRatioType => {
+    // First try to use the API-provided aspect ratio
+    if (video.isPortrait === true) {
+      return "portrait";
+    }
+
+    if (video.isPortrait === false) {
+      return "landscape";
+    }
+
+    // Fallback: check if we can calculate from embedWidth and embedHeight
+    if (video.embedWidth && video.embedHeight) {
+      const ratio = video.embedWidth / video.embedHeight;
+      console.log(`Calculated aspect ratio: ${ratio} for video ${videoId}`);
+
+      if (ratio < 0.9) return "portrait";
+      if (ratio > 1.1) return "landscape";
+      return "square";
+    }
+
+    // Default to landscape if we can't determine
+    return "landscape";
+  };
+
+  const aspectRatioType = getAspectRatioType();
+
+  useEffect(() => {
+    // Log aspect ratio information whenever it changes
+    console.log(`Video ${videoId} aspect ratio type: ${aspectRatioType}`);
+    console.log("Video details:", {
+      embedWidth: video.embedWidth,
+      embedHeight: video.embedHeight,
+      aspectRatio: video.aspectRatio,
+      isPortrait: video.isPortrait,
+    });
+
+    // Add a debug log for checking player container dimensions
+    if (playerContainerRef.current) {
+      const rect = playerContainerRef.current.getBoundingClientRect();
+      console.log("Player container dimensions:", {
+        width: rect.width,
+        height: rect.height,
+      });
+    }
+  }, [videoId, aspectRatioType, video]);
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -117,6 +175,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, onEnded }) => {
       playerInstanceRef.current = null;
     }
 
+    setIsLoading(true);
+
     // Create unique ID for player element
     const playerId = `youtube-player-${videoId}`;
 
@@ -135,14 +195,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, onEnded }) => {
         rel: 0,
         origin: window.location.origin,
         enablejsapi: 1,
-        playsinline: 1,
+        playsinline: 1, // Important for portrait videos on mobile
         controls: 1,
-        fs: 1, // Enable fullscreen button
-        iv_load_policy: 3, // Hide video annotations
-        cc_load_policy: 0, // Don't show captions by default
-        quality: "hd720", // Attempt to load in HD when possible
+        fs: 1,
+        iv_load_policy: 3,
+        cc_load_policy: 0,
       },
       events: {
+        onReady: (event) => {
+          setIsLoading(false);
+          const iframe = event.target.getIframe();
+          console.log(
+            `Player iframe dimensions after load: ${iframe.width}x${iframe.height}`
+          );
+        },
         onStateChange: (event: YouTubeEvent) => {
           // Video ended (state = 0)
           if (event.data === window.YT.PlayerState.ENDED && onEnded) {
@@ -153,10 +219,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, onEnded }) => {
     });
   }, [videoId, playerReady, onEnded]);
 
+  // Apply CSS classes based on the detected aspect ratio
+  const containerClassName = `video-player-container video-player-${aspectRatioType}`;
+
   return (
-    <div className="video-player-container">
+    <div className={containerClassName}>
       <div className="video-player-wrapper" ref={playerContainerRef} />
-      {!playerReady && (
+      {(isLoading || !playerReady) && (
         <div className="video-player-loading">
           <div className="loading-spinner"></div>
         </div>
