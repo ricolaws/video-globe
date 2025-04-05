@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useRef, useEffect, useState } from "react";
 import { Video } from "../services/youTubeService";
+import UnMuteIcon from "./UnMuteIcon";
 
 interface VideoPlayerProps {
   videoId: string;
@@ -23,6 +24,9 @@ interface YouTubePlayer {
   playVideo: () => void;
   pauseVideo: () => void;
   stopVideo: () => void;
+  mute: () => void;
+  unMute: () => void;
+  isMuted: () => boolean;
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
   getPlayerState: () => number;
   getCurrentTime: () => number;
@@ -34,6 +38,7 @@ interface YouTubePlayerOptions {
   videoId: string;
   playerVars?: {
     autoplay?: 0 | 1;
+    mute?: 0 | 1;
     controls?: 0 | 1;
     disablekb?: 0 | 1;
     enablejsapi?: 0 | 1;
@@ -92,8 +97,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const playerInstanceRef = useRef<YouTubePlayer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check if this is likely a mobile device
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof localStorage !== "undefined") {
+      const savedMutePreference = localStorage.getItem("videoPlayerMuted");
+      if (savedMutePreference !== null) {
+        return savedMutePreference === "true";
+      }
+    }
+    return isMobile;
+  });
+
+  const [hasInteracted, setHasInteracted] = useState(false);
+
   // Determine aspect ratio type from video data
   const getAspectRatioType = (): AspectRatioType => {
+    console.log(video.isPortrait);
     // First try to use the API-provided aspect ratio
     if (video.isPortrait === true) {
       return "portrait";
@@ -106,7 +127,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // Fallback: check if we can calculate from embedWidth and embedHeight
     if (video.embedWidth && video.embedHeight) {
       const ratio = video.embedWidth / video.embedHeight;
-      console.log(`Calculated aspect ratio: ${ratio} for video ${videoId}`);
 
       if (ratio < 0.9) return "portrait";
       if (ratio > 1.1) return "landscape";
@@ -119,25 +139,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const aspectRatioType = getAspectRatioType();
 
-  useEffect(() => {
-    // Log aspect ratio information whenever it changes
-    console.log(`Video ${videoId} aspect ratio type: ${aspectRatioType}`);
-    console.log("Video details:", {
-      embedWidth: video.embedWidth,
-      embedHeight: video.embedHeight,
-      aspectRatio: video.aspectRatio,
-      isPortrait: video.isPortrait,
-    });
+  // Toggle mute state and save preference
+  const unmute = () => {
+    if (!playerInstanceRef.current) return;
 
-    // Add a debug log for checking player container dimensions
-    if (playerContainerRef.current) {
-      const rect = playerContainerRef.current.getBoundingClientRect();
-      console.log("Player container dimensions:", {
-        width: rect.width,
-        height: rect.height,
-      });
+    playerInstanceRef.current.unMute();
+
+    // Save preference to localStorage
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("videoPlayerMuted", "false");
     }
-  }, [videoId, aspectRatioType, video]);
+
+    setIsMuted(false);
+    setHasInteracted(true);
+  };
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -176,6 +191,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
 
     setIsLoading(true);
+    // Don't reset mute state for new videos - respect user's preference
 
     // Create unique ID for player element
     const playerId = `youtube-player-${videoId}`;
@@ -187,10 +203,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     playerContainerRef.current.appendChild(playerElement);
 
     // Initialize player with better quality settings
+    // Set mute state based on device type and user preference
     playerInstanceRef.current = new window.YT.Player(playerId, {
       videoId,
       playerVars: {
         autoplay: 1,
+        mute: isMuted ? 1 : 0, // Only mute if necessary
         modestbranding: 1,
         rel: 0,
         origin: window.location.origin,
@@ -204,10 +222,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       events: {
         onReady: (event) => {
           setIsLoading(false);
-          const iframe = event.target.getIframe();
-          console.log(
-            `Player iframe dimensions after load: ${iframe.width}x${iframe.height}`
-          );
+
+          // Apply mute state based on preference
+          if (isMuted) {
+            event.target.mute();
+          } else {
+            event.target.unMute();
+
+            if (isMobile) {
+              // Try to unmute if that's the user's preference
+              // This won't always work due to browser restrictions, but worth trying
+              setTimeout(() => {
+                if (playerInstanceRef.current && !isMuted) {
+                  playerInstanceRef.current.unMute();
+                }
+              }, 1000);
+            }
+          }
+
+          // Reset interaction state for new video
+          setHasInteracted(false);
         },
         onStateChange: (event: YouTubeEvent) => {
           // Video ended (state = 0)
@@ -217,7 +251,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         },
       },
     });
-  }, [videoId, playerReady, onEnded]);
+  }, [videoId, playerReady, onEnded, isMuted, isMobile]);
 
   // Apply CSS classes based on the detected aspect ratio
   const containerClassName = `video-player-container video-player-${aspectRatioType}`;
@@ -229,6 +263,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div className="video-player-loading">
           <div className="loading-spinner"></div>
         </div>
+      )}
+
+      {/* Unmute button - only show on mobile when muted and user hasn't interacted */}
+      {playerReady && !isLoading && isMuted && !hasInteracted && isMobile && (
+        <button
+          onClick={unmute}
+          className="unmute-button"
+          aria-label="Unmute video"
+        >
+          <UnMuteIcon size={26} color="#ffffff" />
+        </button>
       )}
     </div>
   );
