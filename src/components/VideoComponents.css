@@ -22,50 +22,49 @@
   backdrop-filter: blur(8px);
 }
 
-/* Floating Modal Content - No visible background */
+/* Floating Modal Content */
 .floating-modal-content {
   position: relative;
   width: 90%;
   max-width: 1280px;
-  max-height: 90vh;
-  margin-top: 10%;
-  background-color: transparent;
+  max-height: 99vh;
   z-index: 1001;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center content horizontally */
+  align-items: center;
   overflow: visible;
   transition: width 0.3s ease;
 }
 
-/* Video Player Styles - Base container */
+/* Video Player Base Container */
 .video-player-container {
   position: relative;
   background-color: transparent;
   border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-  margin-bottom: 20px; /* Add space for the controls below */
-  transition: width 0.3s ease, padding-top 0.3s ease;
+  margin-bottom: 20px;
+  /* Remove height: 0 which was causing the portrait videos to vanish */
 }
 
-/* Default landscape 16:9 aspect ratio */
+/* Landscape video (16:9) */
 .video-player-landscape {
   width: 100%;
-  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  aspect-ratio: 16 / 9;
+  margin-top: 10%; /* Space from top */
 }
 
-/* Portrait 9:16 aspect ratio - fixed width approach */
+/* Portrait video (9:16) */
 .video-player-portrait {
-  width: 40%; /* Reduced from 50% to make it smaller */
-  padding-top: 71.11%; /* 9:16 Aspect Ratio of the 40% width (40 * 16/9 = 71.11) */
-  max-height: 70vh; /* Reduced from 80vh */
+  width: 50%; /* Base width */
+  aspect-ratio: 9 / 16;
+  margin-top: 0; /* No additional top margin */
 }
 
-/* Square 1:1 aspect ratio */
+/* Square video (1:1) */
 .video-player-square {
   width: 75%;
-  padding-top: 75%; /* 1:1 Aspect Ratio */
+  aspect-ratio: 1 / 1;
 }
 
 .video-player-wrapper {
@@ -79,6 +78,18 @@
   justify-content: center;
 }
 
+/* Alternative approach if the absolute positioning causes issues */
+/* 
+.video-player-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+*/
+
 .video-player-wrapper iframe {
   position: absolute;
   width: 100% !important;
@@ -86,6 +97,16 @@
   display: block;
   border-radius: 4px;
 }
+
+/* Alternative approach if iframe doesn't fill the container */
+/*
+.video-player-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 4px;
+}
+*/
 
 .video-player-loading {
   position: absolute;
@@ -115,14 +136,13 @@
   }
 }
 
-/* Bottom Video Controls - Placed below the video */
+/* Bottom Video Controls */
 .bottom-video-controls {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 20px;
   padding: 10px 0;
-  margin-top: 10px;
   width: 100%;
 }
 
@@ -192,9 +212,33 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .floating-modal-content {
-    width: 95%;
+  /* Medium screens - tablets */
+  .video-player-portrait {
+    width: 80%;
+    margin-top: 15%;
+  }
+
+  .video-player-landscape {
     margin-top: 5%;
+  }
+
+  .arrow-button {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+}
+
+/* Additional responsive adjustments for very small screens */
+@media (max-width: 480px) {
+  /* Small screens - phones */
+  .video-player-portrait {
+    width: 100%;
+    margin-top: 15%;
+  }
+
+  .video-player-landscape {
+    margin-top: 3%;
   }
 
   .arrow-button {
@@ -203,15 +247,7 @@
     font-size: 20px;
   }
 
-  /* For portrait videos on mobile */
-  .video-player-portrait {
-    width: 60%; /* Wider on mobile but still small enough to see buttons */
-  }
-}
-
-/* Additional responsive adjustments for very small screens */
-@media (max-width: 480px) {
-  .video-player-portrait {
-    width: 70%; /* Even wider on very small screens but still compact */
+  .bottom-video-controls {
+    gap: 15px;
   }
 }

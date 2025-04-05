@@ -51,28 +51,30 @@ html {
 .search-info-card {
   background-color: var(--blue-screen);
   color: #ffe96b;
-  padding: 12px 16px;
+  padding: 14px 14px; /* Slightly reduced padding */
   font-family: monospace;
+  line-height: 1.3; /* Reduced line height to make card more compact */
 }
 
 .search-info-coords {
   font-family: monospace;
   font-size: 14px;
-  margin-bottom: 8px;
+  margin-bottom: 6px; /* Reduced margin */
+  line-height: 1.2;
 }
 
 .search-info-location {
   font-size: 22px;
   font-weight: 600;
-  margin-bottom: 10px;
-  line-height: 1.4;
+  margin-bottom: 8px; /* Reduced margin */
+  line-height: 1.3;
   letter-spacing: 0.2rem;
 }
 
 .search-info-stats {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px; /* Reduced gap */
   align-items: flex-start;
 }
 
@@ -95,16 +97,57 @@ html {
   .search-info-container {
     top: 10px;
     left: 10px;
-    max-width: 240px;
+    max-width: 280px;
   }
 
   .search-info-card {
-    padding: 8px 12px;
+    padding: 10px 10px; /* Reduced padding */
   }
 
-  .search-info-coords,
-  .search-info-location,
+  .search-info-coords {
+    font-size: 12px;
+    margin-bottom: 4px;
+    line-height: 1.1;
+  }
+
+  .search-info-location {
+    font-size: 18px; /* Reduced from 22px */
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
   .search-info-item {
     font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .search-info-stats {
+    gap: 1px; /* Further reduced gap */
+  }
+}
+
+/* Additional breakpoint for very small screens */
+@media (max-width: 480px) {
+  .search-info-card {
+    padding: 4px 8px; /* Even smaller padding */
+  }
+
+  .search-info-location {
+    font-size: 14px;
+    line-height: 1.15;
+    letter-spacing: 0.05rem;
+    /* Ensure long location names don't break layout */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .search-info-coords {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  .search-info-item {
+    font-size: 10px;
   }
 }

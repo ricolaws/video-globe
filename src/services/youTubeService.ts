@@ -170,7 +170,7 @@ class YouTubeService {
       params.append("type", "video");
       params.append("order", "date");
       params.append("maxResults", "15");
-      params.append("location", `${latitude}, ${longitude}`);
+      params.append("location", `${latitude},${longitude}`);
       params.append("locationRadius", "50km");
       params.append("videoEmbeddable", "true");
 
