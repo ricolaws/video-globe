@@ -210,8 +210,8 @@
   /* Small screens - phones */
   .video-player-portrait {
     width: 100%;
-    margin-top: 10%;
-    max-height: 60vh;
+    margin-top: 15%;
+    max-height: 58vh;
   }
 
   .video-player-landscape {
