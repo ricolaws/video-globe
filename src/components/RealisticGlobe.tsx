@@ -1,8 +1,6 @@
 import { useTexture } from "@react-three/drei";
 import { Environment, Stars } from "@react-three/drei";
 import GlobeBase from "./GlobeBase";
-
-// Import texture assets
 import earthBumpPath from "../assets/8081_earthbump10k.jpg";
 import waterTexturePath from "../assets/waterMap.jpg";
 import specTexturePath from "../assets/earthspec1k.jpg";
@@ -22,7 +20,6 @@ export default function RealisticGlobe({ setCoords }: RealisticGlobeProps) {
 
   const globalLightScale = 9.0;
 
-  // Earth material
   const earthMaterial = (
     <meshPhysicalMaterial
       bumpMap={textures.bumpMap}
@@ -53,11 +50,10 @@ export default function RealisticGlobe({ setCoords }: RealisticGlobeProps) {
       earthMaterial={earthMaterial}
       atmosphereMaterial={atmosphereMaterial}
     >
-      {/* Environment and ambient lighting */}
+      {/* Environment and lighting */}
       <Environment preset="night" />
       <ambientLight intensity={0.3} />
 
-      {/* Point lights for dramatic lighting */}
       <pointLight
         position={[7, 2, 17]}
         color="#ff6000"

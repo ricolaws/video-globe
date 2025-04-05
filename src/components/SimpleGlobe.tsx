@@ -1,8 +1,6 @@
 import { useTexture } from "@react-three/drei";
 import GlobeBase from "./GlobeBase";
-
-// Import textures needed for the simplified theme
-import earthBumpPath from "../assets/8081_earthbump10k.jpg";
+import earthBumpPath from "../assets/8081_earthbump4k.jpg";
 import specTexturePath from "../assets/earthspec1k.jpg";
 import waterTexturePath from "../assets/waterMap.jpg";
 
@@ -17,7 +15,6 @@ export default function SimpleGlobe({ setCoords }: SimpleGlobeProps) {
     waterMap: waterTexturePath,
   });
 
-  // Earth material - with the specified styling
   const earthMaterial = (
     <meshLambertMaterial
       flatShading={false}
@@ -30,7 +27,7 @@ export default function SimpleGlobe({ setCoords }: SimpleGlobeProps) {
     />
   );
 
-  // Atmosphere material - as specified
+  // Atmosphere material
   const atmosphereMaterial = (
     <meshToonMaterial
       color={"#cce6ea"}
@@ -46,7 +43,6 @@ export default function SimpleGlobe({ setCoords }: SimpleGlobeProps) {
       earthMaterial={earthMaterial}
       atmosphereMaterial={atmosphereMaterial}
     >
-      {/* Simple lighting setup as specified */}
       <hemisphereLight
         color={"#ffefef"}
         groundColor={"#242221"}

@@ -75,11 +75,9 @@ interface YouTubeVideoDetailsResponse {
 
 class YouTubeService {
   private static instance: YouTubeService;
-  private useFakeData: boolean;
   private proxyUrl: string;
 
   private constructor() {
-    this.useFakeData = import.meta.env.VITE_USE_FAKE_DATA === "true";
     this.proxyUrl = "/api/youtube";
     console.log("YouTubeService initialized with proxy URL:", this.proxyUrl);
   }
@@ -103,10 +101,7 @@ class YouTubeService {
       return { items: [] };
     }
 
-    // Determine which endpoint to use
-    const endpoint = this.useFakeData
-      ? `${this.proxyUrl}/fake/videos`
-      : `${this.proxyUrl}/videos`;
+    const endpoint = `${this.proxyUrl}/videos`;
 
     // Set up parameters - now including player in addition to contentDetails
     const params = new URLSearchParams();
@@ -156,30 +151,20 @@ class YouTubeService {
     longitude: number,
     pageToken?: string
   ): Promise<{ videos: Video[]; nextPageToken?: string }> {
-    // Determine which endpoint to use
-    const endpoint = this.useFakeData
-      ? `${this.proxyUrl}/fake/search`
-      : `${this.proxyUrl}/search`;
+    const endpoint = `${this.proxyUrl}/search`;
 
     // Set up parameters
     const params = new URLSearchParams();
 
-    // Only add location parameters for real API calls
-    if (!this.useFakeData) {
-      params.append("part", "snippet");
-      params.append("type", "video");
-      params.append("order", "date");
-      params.append("maxResults", "15");
-      params.append("location", `${latitude}, ${longitude}`);
-      params.append("locationRadius", "50km");
-      params.append("videoEmbeddable", "true");
+    params.append("part", "snippet");
+    params.append("type", "video");
+    params.append("order", "date");
+    params.append("maxResults", "15");
+    params.append("location", `${latitude}, ${longitude}`);
+    params.append("locationRadius", "50km");
+    params.append("videoEmbeddable", "true");
 
-      if (pageToken) {
-        params.append("pageToken", pageToken);
-      }
-    }
-
-    if (this.useFakeData && pageToken) {
+    if (pageToken) {
       params.append("pageToken", pageToken);
     }
 
@@ -236,12 +221,6 @@ class YouTubeService {
             aspectRatio =
               detailItem.player.embedWidth / detailItem.player.embedHeight;
             isPortrait = aspectRatio < 1;
-
-            console.log(
-              `Video ${basicVideo.id} aspect ratio: ${aspectRatio} (${
-                isPortrait ? "portrait" : "landscape"
-              })`
-            );
           }
 
           return {
@@ -252,7 +231,6 @@ class YouTubeService {
             description: detailItem.snippet?.description,
             locationDescription:
               detailItem.recordingDetails?.locationDescription,
-            // Add contentDetails if available
             dimension: detailItem.contentDetails?.dimension,
             definition: detailItem.contentDetails?.definition,
             duration: detailItem.contentDetails?.duration,

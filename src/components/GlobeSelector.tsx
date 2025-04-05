@@ -13,7 +13,6 @@ export default function GlobeSelector({
   setCoords,
   useRealistic,
 }: GlobeSelectorProps) {
-  // Simply return the appropriate globe component based on the prop
   return (
     <Suspense fallback={null}>
       {useRealistic ? (

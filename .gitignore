@@ -31,3 +31,4 @@ dist-ssr
 server/.env
 server/.env.local
 .vercel
+.env*.local
