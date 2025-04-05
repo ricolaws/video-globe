@@ -1,3 +1,4 @@
+// Updated YouTubeService.ts with player information
 export interface Video {
   id: string;
   title: string;
@@ -8,6 +9,17 @@ export interface Video {
   locationDescription?: string;
   publishedAt?: string;
   description?: string;
+  // Fields from contentDetails
+  dimension?: string; // "2d" or "3d"
+  definition?: string; // "hd" or "sd"
+  duration?: string;
+  projection?: string; // "rectangular" or "360"
+  // Fields from player
+  embedWidth?: number;
+  embedHeight?: number;
+  // Calculated aspect ratio properties
+  aspectRatio?: number;
+  isPortrait?: boolean;
 }
 
 interface YouTubeSearchResponse {
@@ -38,6 +50,18 @@ interface YouTubeVideoDetailsResponse {
     statistics: {
       viewCount: string;
       likeCount: string;
+    };
+    contentDetails?: {
+      duration: string;
+      dimension: string;
+      definition: string;
+      caption: string;
+      projection: string;
+    };
+    player?: {
+      embedHtml: string;
+      embedHeight?: number;
+      embedWidth?: number;
     };
     recordingDetails?: {
       locationDescription?: string;
@@ -84,10 +108,17 @@ class YouTubeService {
       ? `${this.proxyUrl}/fake/videos`
       : `${this.proxyUrl}/videos`;
 
-    // Set up parameters
+    // Set up parameters - now including player in addition to contentDetails
     const params = new URLSearchParams();
-    params.append("part", "snippet,statistics,recordingDetails");
+    params.append(
+      "part",
+      "snippet,statistics,recordingDetails,contentDetails,player"
+    );
     params.append("id", videoIds.join(","));
+
+    // Add maxWidth and maxHeight to ensure we get embedWidth and embedHeight
+    params.append("maxWidth", "1280");
+    params.append("maxHeight", "720");
 
     // Construct URL
     const url = `${endpoint}?${params.toString()}`;
@@ -102,6 +133,16 @@ class YouTubeService {
 
       const data = await response.json();
       console.log(`Retrieved ${data.items?.length || 0} video details`);
+
+      // Log the first item to see player information
+      if (data.items && data.items.length > 0 && data.items[0].player) {
+        console.log("Player information for first video:", {
+          embedWidth: data.items[0].player.embedWidth,
+          embedHeight: data.items[0].player.embedHeight,
+        });
+      } else {
+        console.log("No player information available in response");
+      }
 
       return data;
     } catch (error) {
@@ -187,6 +228,22 @@ class YouTubeService {
         );
 
         if (detailItem) {
+          // Calculate aspect ratio if embedWidth and embedHeight are available
+          let aspectRatio: number | undefined;
+          let isPortrait = false;
+
+          if (detailItem.player?.embedWidth && detailItem.player?.embedHeight) {
+            aspectRatio =
+              detailItem.player.embedWidth / detailItem.player.embedHeight;
+            isPortrait = aspectRatio < 1;
+
+            console.log(
+              `Video ${basicVideo.id} aspect ratio: ${aspectRatio} (${
+                isPortrait ? "portrait" : "landscape"
+              })`
+            );
+          }
+
           return {
             ...basicVideo,
             viewCount: detailItem.statistics?.viewCount,
@@ -195,16 +252,21 @@ class YouTubeService {
             description: detailItem.snippet?.description,
             locationDescription:
               detailItem.recordingDetails?.locationDescription,
+            // Add contentDetails if available
+            dimension: detailItem.contentDetails?.dimension,
+            definition: detailItem.contentDetails?.definition,
+            duration: detailItem.contentDetails?.duration,
+            projection: detailItem.contentDetails?.projection,
+            // Add player and aspect ratio information
+            embedWidth: detailItem.player?.embedWidth,
+            embedHeight: detailItem.player?.embedHeight,
+            aspectRatio,
+            isPortrait,
           };
         }
 
         return basicVideo;
       });
-
-      // Log videos
-      if (videos.length > 0) {
-        console.log("Videos with details:", videos);
-      }
 
       return {
         videos,
