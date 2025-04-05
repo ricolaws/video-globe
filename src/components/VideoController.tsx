@@ -75,11 +75,6 @@ const VideoController: React.FC<VideoControllerProps> = ({
       <div className="modal-background" onClick={onClose}></div>
 
       <div className="floating-modal-content">
-        {/* Title without background */}
-        {/* <div className="floating-video-title">
-          <div className="video-title">{currentVideo.title}</div>
-        </div> */}
-
         <VideoPlayer
           video={currentVideo}
           videoId={currentVideo.id}

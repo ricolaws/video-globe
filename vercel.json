@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    { "source": "/api/youtube/search", "destination": "/api/youtube/search" },
+    { "source": "/api/youtube/videos", "destination": "/api/youtube/videos" },
+    {
+      "source": "/api/youtube/fake/search",
+      "destination": "/api/youtube/search"
+    },
+    {
+      "source": "/api/youtube/fake/videos",
+      "destination": "/api/youtube/videos"
+    }
+  ]
+}

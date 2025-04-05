@@ -80,7 +80,7 @@ class YouTubeService {
 
   private constructor() {
     this.useFakeData = import.meta.env.VITE_USE_FAKE_DATA === "true";
-    this.proxyUrl = import.meta.env.VITE_PROXY_URL || "/api/youtube";
+    this.proxyUrl = "/api/youtube";
     console.log("YouTubeService initialized with proxy URL:", this.proxyUrl);
   }
 
