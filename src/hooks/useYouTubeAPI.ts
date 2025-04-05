@@ -7,7 +7,6 @@ const useYouTubeAPI = (coords: [number, number] | null) => {
   const [error, setError] = useState<string | null>(null);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
 
-  // Keep track of last fetched coords to avoid duplicate requests
   const [lastFetched, setLastFetched] = useState<string | null>(null);
 
   // Fetch videos when coordinates change
