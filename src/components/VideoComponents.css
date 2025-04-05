@@ -58,7 +58,8 @@
 .video-player-portrait {
   width: 50%; /* Base width */
   aspect-ratio: 9 / 16;
-  margin-top: 0; /* No additional top margin */
+  margin-top: 5%; /* No additional top margin */
+  max-height: 95vh;
 }
 
 /* Square video (1:1) */
@@ -190,6 +191,7 @@
   .video-player-portrait {
     width: 80%;
     margin-top: 15%;
+    max-height: 66vh;
   }
 
   .video-player-landscape {
@@ -208,7 +210,8 @@
   /* Small screens - phones */
   .video-player-portrait {
     width: 100%;
-    margin-top: 15%;
+    margin-top: 10%;
+    max-height: 60vh;
   }
 
   .video-player-landscape {
