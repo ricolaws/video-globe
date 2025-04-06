@@ -81,6 +81,7 @@ declare global {
       PlayerState: typeof PlayerState;
     };
     onYouTubeIframeAPIReady: (() => void) | null;
+    hasEnabledAutoplay?: boolean; // Global flag to track if user has enabled autoplay
   }
 }
 
@@ -97,66 +98,51 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const playerInstanceRef = useRef<YouTubePlayer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if this is likely a mobile device
+  // Check if this is a mobile device
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  const [isMuted, setIsMuted] = useState(() => {
-    if (typeof localStorage !== "undefined") {
-      const savedMutePreference = localStorage.getItem("videoPlayerMuted");
-      if (savedMutePreference !== null) {
-        return savedMutePreference === "true";
-      }
-    }
-    return isMobile;
-  });
+  // Check if user has already enabled autoplay with sound
+  const autoplayEnabled =
+    typeof window !== "undefined" &&
+    (window.hasEnabledAutoplay === true || !isMobile); // Auto-enable for desktop
 
-  const [hasInteracted, setHasInteracted] = useState(false);
+  // State for play button visibility
+  const [showPlayButton, setShowPlayButton] = useState(!autoplayEnabled);
 
   // Determine aspect ratio type from video data
   const getAspectRatioType = (): AspectRatioType => {
-    console.log(video.isPortrait);
-    // First try to use the API-provided aspect ratio
-    if (video.isPortrait === true) {
-      return "portrait";
-    }
+    if (video.isPortrait === true) return "portrait";
+    if (video.isPortrait === false) return "landscape";
 
-    if (video.isPortrait === false) {
-      return "landscape";
-    }
-
-    // Fallback: check if we can calculate from embedWidth and embedHeight
     if (video.embedWidth && video.embedHeight) {
       const ratio = video.embedWidth / video.embedHeight;
-
       if (ratio < 0.9) return "portrait";
       if (ratio > 1.1) return "landscape";
       return "square";
     }
 
-    // Default to landscape if we can't determine
     return "landscape";
   };
 
   const aspectRatioType = getAspectRatioType();
 
-  // Toggle mute state and save preference
-  const unmute = () => {
+  // Enable autoplay with sound for this and all future videos
+  const enableAutoplayWithSound = () => {
     if (!playerInstanceRef.current) return;
 
+    // Play and unmute the current video
     playerInstanceRef.current.unMute();
+    playerInstanceRef.current.playVideo();
 
-    // Save preference to localStorage
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("videoPlayerMuted", "false");
-    }
+    // Set global flag for future videos
+    window.hasEnabledAutoplay = true;
 
-    setIsMuted(false);
-    setHasInteracted(true);
+    // Hide the play button
+    setShowPlayButton(false);
   };
 
   // Load YouTube IFrame API
   useEffect(() => {
-    // Only load the script once
     if (!document.getElementById("youtube-iframe-api")) {
       const tag = document.createElement("script");
       tag.id = "youtube-iframe-api";
@@ -164,17 +150,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const firstScriptTag = document.getElementsByTagName("script")[0];
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
 
-      // Create a global callback for when API is ready
       window.onYouTubeIframeAPIReady = () => {
         setPlayerReady(true);
       };
     } else if (window.YT && window.YT.Player) {
-      // API already loaded
       setPlayerReady(true);
     }
 
     return () => {
-      // Clean up player instance when component unmounts
       if (playerInstanceRef.current) {
         playerInstanceRef.current.destroy();
       }
@@ -191,7 +174,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
 
     setIsLoading(true);
-    // Don't reset mute state for new videos - respect user's preference
 
     // Create unique ID for player element
     const playerId = `youtube-player-${videoId}`;
@@ -202,18 +184,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     playerContainerRef.current.innerHTML = "";
     playerContainerRef.current.appendChild(playerElement);
 
-    // Initialize player with better quality settings
-    // Set mute state based on device type and user preference
+    // If user has already enabled autoplay, or this is a desktop, use those settings
+    // Otherwise, start muted to enable autoplay on mobile
+    const autoplay = 1; // Always try to autoplay
+    const mute = autoplayEnabled ? 0 : 1; // Only mute if on mobile and autoplay hasn't been enabled yet
+
+    // Initialize the player
     playerInstanceRef.current = new window.YT.Player(playerId, {
       videoId,
       playerVars: {
-        autoplay: 1,
-        mute: isMuted ? 1 : 0, // Only mute if necessary
+        autoplay,
+        mute,
         modestbranding: 1,
         rel: 0,
         origin: window.location.origin,
         enablejsapi: 1,
-        playsinline: 1, // Important for portrait videos on mobile
+        playsinline: 1,
         controls: 1,
         fs: 1,
         iv_load_policy: 3,
@@ -223,35 +209,27 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         onReady: (event) => {
           setIsLoading(false);
 
-          // Apply mute state based on preference
-          if (isMuted) {
-            event.target.mute();
-          } else {
+          // If autoplay is already enabled by the user, ensure we're unmuted
+          if (autoplayEnabled) {
             event.target.unMute();
-
-            if (isMobile) {
-              // Try to unmute if that's the user's preference
-              // This won't always work due to browser restrictions, but worth trying
-              setTimeout(() => {
-                if (playerInstanceRef.current && !isMuted) {
-                  playerInstanceRef.current.unMute();
-                }
-              }, 1000);
-            }
+            event.target.playVideo();
+            setShowPlayButton(false);
+          } else {
+            // Otherwise, make sure we're muted to allow autoplay
+            event.target.mute();
+            // And start playback
+            event.target.playVideo();
           }
-
-          // Reset interaction state for new video
-          setHasInteracted(false);
         },
         onStateChange: (event: YouTubeEvent) => {
-          // Video ended (state = 0)
+          // When the video ends and we have a callback, call it
           if (event.data === window.YT.PlayerState.ENDED && onEnded) {
             onEnded();
           }
         },
       },
     });
-  }, [videoId, playerReady, onEnded, isMuted, isMobile]);
+  }, [videoId, playerReady, onEnded, autoplayEnabled]);
 
   // Apply CSS classes based on the detected aspect ratio
   const containerClassName = `video-player-container video-player-${aspectRatioType}`;
@@ -265,14 +243,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Unmute button - only show on mobile when muted and user hasn't interacted */}
-      {playerReady && !isLoading && isMuted && !hasInteracted && isMobile && (
+      {/* Play button - only shown on mobile before the user has enabled autoplay with sound */}
+      {playerReady && !isLoading && showPlayButton && isMobile && (
         <button
-          onClick={unmute}
-          className="unmute-button"
-          aria-label="Unmute video"
+          onClick={enableAutoplayWithSound}
+          className="play-sound-button"
+          aria-label="Play with sound"
         >
-          <UnMuteIcon size={26} color="#ffffff" />
+          <div className="play-icon-circle">
+            <UnMuteIcon size={24} color="#ffffff" />
+          </div>
+          <span>Tap for sound</span>
         </button>
       )}
     </div>
