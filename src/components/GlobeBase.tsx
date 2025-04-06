@@ -108,10 +108,10 @@ export default function GlobeBase({
       <OrbitControls
         minDistance={minDistance}
         maxDistance={maxDistance}
-        zoomSpeed={0.1}
+        zoomSpeed={0.12}
         panSpeed={0.2}
         enableDamping
-        dampingFactor={0.06}
+        dampingFactor={0.05}
       />
 
       {/* Theme-specific elements (additional lighting, effects) will be injected here */}

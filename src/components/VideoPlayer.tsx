@@ -99,6 +99,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Check if this is a mobile device
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  // const isMobile = true;
 
   // Check if user has already enabled autoplay with sound
   const autoplayEnabled =
