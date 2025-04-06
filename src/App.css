@@ -1,6 +1,6 @@
 :root {
   --background-color: #0e0e13;
-  --blue-screen: #0041b2;
+  --blue-screen: #0120a8;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -45,30 +45,33 @@ html {
   top: 20px;
   left: 20px;
   z-index: 1100;
-  max-width: 360px;
+  max-width: 380px;
 }
 
 .search-info-card {
   background-color: var(--blue-screen);
-  color: #ffe96b;
-  padding: 14px 14px; /* Slightly reduced padding */
+  color: #ebebeb;
+  padding: 14px 14px;
   font-family: monospace;
-  line-height: 1.3; /* Reduced line height to make card more compact */
+  line-height: 1.3;
 }
 
 .search-info-coords {
   font-family: monospace;
   font-size: 14px;
-  margin-bottom: 6px; /* Reduced margin */
+  margin-bottom: 6px;
   line-height: 1.2;
 }
 
 .search-info-location {
   font-size: 22px;
   font-weight: 600;
-  margin-bottom: 8px; /* Reduced margin */
+  margin-bottom: 6px;
   line-height: 1.3;
   letter-spacing: 0.2rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .search-info-stats {
@@ -148,6 +151,46 @@ html {
   }
 
   .search-info-item {
+    font-size: 10px;
+  }
+}
+
+/* Globe toggle button */
+.globe-toggle-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 191;
+  padding: 14px 14px;
+  background-color: rgba(0, 0, 0, 0);
+  color: white;
+  border: none;
+  font-family: system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.globe-toggle-button:hover {
+  color: #ebebeb;
+  text-shadow: 0 0 5px rgba(255, 233, 107, 0.3);
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .globe-toggle-button {
+    top: 15px;
+    right: 15px;
+    padding: 6px 6px;
+    font-size: 10px;
+  }
+}
+
+/* Additional breakpoint for very small screens */
+@media (max-width: 480px) {
+  .globe-toggle-button {
+    top: 10px;
+    right: 10px;
+    padding: 6px 6px;
     font-size: 10px;
   }
 }

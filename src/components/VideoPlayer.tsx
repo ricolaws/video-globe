@@ -59,7 +59,6 @@ interface YouTubePlayerOptions {
   };
 }
 
-// Enum for YouTube player states
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 enum PlayerState {
   UNSTARTED = -1,
@@ -106,7 +105,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     typeof window !== "undefined" &&
     (window.hasEnabledAutoplay === true || !isMobile); // Auto-enable for desktop
 
-  // State for play button visibility
   const [showPlayButton, setShowPlayButton] = useState(!autoplayEnabled);
 
   // Determine aspect ratio type from video data
@@ -130,28 +128,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const enableAutoplayWithSound = () => {
     if (!playerInstanceRef.current) return;
 
-    // For mobile, we need to capture the current time
     const currentTime = playerInstanceRef.current.getCurrentTime();
 
     // Unmute the video
     playerInstanceRef.current.unMute();
     playerInstanceRef.current.playVideo();
 
-    // On mobile, we need to explicitly start playback again
-    // This overcomes the browser restrictions by chaining actions after user interaction
     setTimeout(() => {
       if (playerInstanceRef.current) {
-        // Seek to where we were to prevent jumpiness
         playerInstanceRef.current.seekTo(currentTime, true);
-        // Force play - this should work immediately after user interaction
         playerInstanceRef.current.playVideo();
       }
     }, 50);
 
-    // Set global flag for future videos
     window.hasEnabledAutoplay = true;
 
-    // Hide the play button
     setShowPlayButton(false);
   };
 
@@ -198,8 +189,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     playerContainerRef.current.innerHTML = "";
     playerContainerRef.current.appendChild(playerElement);
 
-    // If user has already enabled autoplay, or this is a desktop, use those settings
-    // Otherwise, start muted to enable autoplay on mobile
     const autoplay = 1; // Always try to autoplay
     const mute = autoplayEnabled ? 0 : 1; // Only mute if on mobile and autoplay hasn't been enabled yet
 
@@ -223,7 +212,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         onReady: (event) => {
           setIsLoading(false);
 
-          // If autoplay is already enabled by the user, ensure we're unmuted
           if (autoplayEnabled) {
             event.target.unMute();
 
@@ -238,7 +226,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           } else {
             // Otherwise, make sure we're muted to allow autoplay
             event.target.mute();
-            // And start playback
             event.target.playVideo();
           }
         },
@@ -274,7 +261,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <div className="play-icon-circle">
             <UnMuteIcon size={24} color="#ffffff" />
           </div>
-          <span>Tap to play with sound</span>
+          <span>Play with sound</span>
         </button>
       )}
     </div>

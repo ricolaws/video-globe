@@ -1,0 +1,231 @@
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--background-color);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.6s ease;
+
+  /* Custom color variable for easy changes */
+  --loading-color: #ebebeb;
+}
+
+.loading-screen.fade-out {
+  opacity: 0;
+}
+
+.loading-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.globe-container {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.globe-icon {
+  z-index: 2004;
+  filter: drop-shadow(0 0 10px rgba(255, 233, 107, 0.5));
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Size the SVG appropriately */
+.globe-icon svg {
+  width: 100px;
+  height: 100px;
+  filter: drop-shadow(
+    0 0 8px color-mix(in srgb, var(--loading-color) 50%, transparent)
+  );
+}
+
+.spinner-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.outer-ring {
+  width: 280px;
+  height: 280px;
+  border-top-color: var(--loading-color);
+  border-right-color: var(--loading-color);
+  animation: spin 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 2001;
+}
+
+.middle-ring {
+  width: 230px;
+  height: 230px;
+  border-right-color: var(--loading-color);
+  border-bottom-color: var(--loading-color);
+  animation: spin-reverse 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 2002;
+}
+
+.inner-ring {
+  width: 180px;
+  height: 180px;
+  border-top-color: var(--loading-color);
+  border-left-color: var(--loading-color);
+  animation: spin 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 2003;
+}
+
+.loading-text {
+  margin-top: 30px;
+  font-family: monospace;
+  color: var(--loading-color);
+  font-size: 22px;
+  letter-spacing: 0.2rem;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-reverse {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Glow effect behind the globe */
+.globe-container::after {
+  content: "";
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--loading-color) 20%, transparent) 0%,
+    color-mix(in srgb, var(--loading-color) 0%, transparent) 70%
+  );
+  border-radius: 50%;
+  z-index: 2000;
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .globe-container {
+    width: 240px;
+    height: 240px;
+  }
+
+  .outer-ring {
+    width: 210px;
+    height: 210px;
+  }
+
+  .middle-ring {
+    width: 170px;
+    height: 170px;
+  }
+
+  .inner-ring {
+    width: 130px;
+    height: 130px;
+  }
+
+  /* Adjust SVG size for medium screens */
+  .globe-icon svg {
+    width: 75px;
+    height: 75px;
+  }
+
+  /* Adjust glow effect size */
+  .globe-container::after {
+    width: 110px;
+    height: 110px;
+  }
+
+  .loading-text {
+    font-size: 18px;
+  }
+}
+
+/* Additional breakpoint for very small screens */
+@media (max-width: 480px) {
+  .globe-container {
+    width: 200px;
+    height: 200px;
+  }
+
+  .outer-ring {
+    width: 180px;
+    height: 180px;
+  }
+
+  .middle-ring {
+    width: 150px;
+    height: 150px;
+  }
+
+  .inner-ring {
+    width: 120px;
+    height: 120px;
+  }
+
+  /* Adjust SVG size for small screens */
+  .globe-icon svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Adjust glow effect size */
+  .globe-container::after {
+    width: 90px;
+    height: 90px;
+  }
+
+  .loading-text {
+    font-size: 16px;
+    letter-spacing: 0.15rem;
+  }
+}
