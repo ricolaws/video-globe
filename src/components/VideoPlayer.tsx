@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useRef, useEffect, useState } from "react";
 import { Video } from "../services/youTubeService";
 import UnMuteIcon from "./UnMuteIcon";
@@ -59,6 +60,7 @@ interface YouTubePlayerOptions {
 }
 
 // Enum for YouTube player states
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 enum PlayerState {
   UNSTARTED = -1,
   ENDED = 0,
@@ -133,6 +135,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     // Unmute the video
     playerInstanceRef.current.unMute();
+    playerInstanceRef.current.playVideo();
 
     // On mobile, we need to explicitly start playback again
     // This overcomes the browser restrictions by chaining actions after user interaction
