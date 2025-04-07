@@ -98,13 +98,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   // Check if this is a mobile device
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  // const isMobile = true;
+  // const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isMobile = true;
 
+  // More persistent approach using sessionStorage + window flag
   // Check if user has already enabled autoplay with sound
   const autoplayEnabled =
     typeof window !== "undefined" &&
-    (window.hasEnabledAutoplay === true || !isMobile); // Auto-enable for desktop
+    (sessionStorage.getItem("hasEnabledAutoplay") === "true" ||
+      window.hasEnabledAutoplay === true ||
+      !isMobile); // Auto-enable for desktop
 
   const [showPlayButton, setShowPlayButton] = useState(!autoplayEnabled);
 
@@ -127,28 +130,45 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Enable autoplay with sound for this and all future videos
   const enableAutoplayWithSound = () => {
-    if (!playerInstanceRef.current) return;
+    console.log(`[VideoPlayer] enableAutoplayWithSound called`);
+
+    if (!playerInstanceRef.current) {
+      console.log(
+        `[VideoPlayer] Player not ready yet, can't enable autoplay with sound`
+      );
+      return;
+    }
 
     const currentTime = playerInstanceRef.current.getCurrentTime();
+    const playerState = playerInstanceRef.current.getPlayerState();
+    console.log(
+      `[VideoPlayer] Current time: ${currentTime}, Player state: ${playerState}`
+    );
 
-    // Unmute the video
+    // Unmute the video without restarting it
+    console.log(`[VideoPlayer] Unmuting`);
     playerInstanceRef.current.unMute();
-    playerInstanceRef.current.playVideo();
 
-    setTimeout(() => {
-      if (playerInstanceRef.current) {
-        playerInstanceRef.current.seekTo(currentTime, true);
-        playerInstanceRef.current.playVideo();
-      }
-    }, 50);
+    // Only play if not already playing (to avoid restart)
+    if (playerState !== window.YT.PlayerState.PLAYING) {
+      console.log(`[VideoPlayer] Playing video (was not already playing)`);
+      playerInstanceRef.current.playVideo();
+    } else {
+      console.log(`[VideoPlayer] Video already playing, not restarting`);
+    }
 
+    console.log(`[VideoPlayer] Setting autoplay enabled flags`);
     window.hasEnabledAutoplay = true;
+    // Also store in sessionStorage for better persistence
+    sessionStorage.setItem("hasEnabledAutoplay", "true");
 
     setShowPlayButton(false);
   };
 
   // Load YouTube IFrame API
   useEffect(() => {
+    console.log(`[VideoPlayer] Initial mount, loading YouTube API`);
+
     if (!document.getElementById("youtube-iframe-api")) {
       const tag = document.createElement("script");
       tag.id = "youtube-iframe-api";
@@ -157,13 +177,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
 
       window.onYouTubeIframeAPIReady = () => {
+        console.log(`[VideoPlayer] YouTube API ready callback`);
         setPlayerReady(true);
       };
     } else if (window.YT && window.YT.Player) {
+      console.log(`[VideoPlayer] YouTube API already loaded`);
       setPlayerReady(true);
     }
 
     return () => {
+      console.log(`[VideoPlayer] Component unmounting, cleaning up player`);
       if (playerInstanceRef.current) {
         playerInstanceRef.current.destroy();
       }
@@ -174,7 +197,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     if (!playerReady || !playerContainerRef.current) return;
 
+    console.log(`[VideoPlayer] Creating new player for ${videoId}`);
+    console.log(`[VideoPlayer] autoplayEnabled: ${autoplayEnabled}`);
+    console.log(
+      `[VideoPlayer] window.hasEnabledAutoplay: ${window.hasEnabledAutoplay}`
+    );
+    console.log(
+      `[VideoPlayer] sessionStorage.hasEnabledAutoplay: ${sessionStorage.getItem(
+        "hasEnabledAutoplay"
+      )}`
+    );
+
     if (playerInstanceRef.current) {
+      console.log(`[VideoPlayer] Destroying previous player`);
       playerInstanceRef.current.destroy();
       playerInstanceRef.current = null;
     }
@@ -192,6 +227,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     const autoplay = 1; // Always try to autoplay
     const mute = autoplayEnabled ? 0 : 1; // Only mute if on mobile and autoplay hasn't been enabled yet
+
+    console.log(
+      `[VideoPlayer] Player config - autoplay: ${autoplay}, mute: ${mute}`
+    );
 
     // Initialize the player
     playerInstanceRef.current = new window.YT.Player(playerId, {
@@ -211,34 +250,91 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       },
       events: {
         onReady: (event) => {
+          console.log(`[VideoPlayer] Player ready event`);
           setIsLoading(false);
 
           if (autoplayEnabled) {
+            console.log(`[VideoPlayer] Autoplay enabled, unmuting and playing`);
             event.target.unMute();
 
-            // Always try to play, with a slight delay for stability
+            // Ensure autoplay flags are consistent
+            window.hasEnabledAutoplay = true;
+            sessionStorage.setItem("hasEnabledAutoplay", "true");
+
+            // Always try to play, with a short delay for stability
+            // Use a longer delay for mobile to give the browser more time
+            const playDelay = isMobile ? 300 : 100;
+
             setTimeout(() => {
               if (playerInstanceRef.current) {
+                console.log(
+                  `[VideoPlayer] Delayed play attempt after ${playDelay}ms`
+                );
                 playerInstanceRef.current.playVideo();
+
+                // Double-check it's unmuted
+                if (playerInstanceRef.current.isMuted()) {
+                  console.log(`[VideoPlayer] Player was muted, unmuting again`);
+                  playerInstanceRef.current.unMute();
+                }
               }
-            }, 100);
+            }, playDelay);
 
             setShowPlayButton(false);
           } else {
+            console.log(
+              `[VideoPlayer] Autoplay not enabled, muting and playing`
+            );
             // Otherwise, make sure we're muted to allow autoplay
             event.target.mute();
             event.target.playVideo();
           }
         },
         onStateChange: (event: YouTubeEvent) => {
+          console.log(`[VideoPlayer] Player state changed: ${event.data}`);
+
+          // Log detailed state for debugging
+          const stateNames = {
+            [-1]: "UNSTARTED",
+            0: "ENDED",
+            1: "PLAYING",
+            2: "PAUSED",
+            3: "BUFFERING",
+            5: "CUED",
+          };
+          console.log(
+            `[VideoPlayer] State: ${stateNames[event.data] || event.data}`
+          );
+
+          // Check if player is muted for debugging
+          if (playerInstanceRef.current) {
+            const isMuted = playerInstanceRef.current.isMuted();
+            console.log(`[VideoPlayer] Player muted state: ${isMuted}`);
+          }
+
           // When the video ends and we have a callback, call it
           if (event.data === window.YT.PlayerState.ENDED && onEnded) {
+            console.log(`[VideoPlayer] Video ended, calling onEnded callback`);
+            // Store current autoplay settings before transitioning
+            const currentAutoplaySettings = {
+              hasEnabled: window.hasEnabledAutoplay,
+              sessionValue: sessionStorage.getItem("hasEnabledAutoplay"),
+            };
+            console.log(
+              `[VideoPlayer] Current autoplay settings:`,
+              currentAutoplaySettings
+            );
+
             onEnded();
           }
         },
+        onError: (event) => {
+          console.error(`[VideoPlayer] YouTube player error: ${event.data}`);
+          setIsLoading(false);
+        },
       },
     });
-  }, [videoId, playerReady, onEnded, autoplayEnabled]);
+  }, [videoId, playerReady, onEnded, autoplayEnabled, isMobile]);
 
   // Apply CSS classes based on the detected aspect ratio
   const containerClassName = `video-player-container video-player-${aspectRatioType}`;
