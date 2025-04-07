@@ -294,7 +294,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           console.log(`[VideoPlayer] Player state changed: ${event.data}`);
 
           // Log detailed state for debugging
-          const stateNames = {
+          const stateNames: Record<number, string> = {
             [-1]: "UNSTARTED",
             0: "ENDED",
             1: "PLAYING",
