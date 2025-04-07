@@ -107,7 +107,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Check if this is a mobile device
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  // const isMobile = true;
 
   // Determine aspect ratio type from video data
   const getAspectRatioType = (): AspectRatioType => {
@@ -128,21 +127,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Function to handle unmuting that won't trigger re-renders of the component
   const enableSoundAndRememberChoice = useCallback(() => {
-    console.log(`[VideoPlayer] enableSoundAndRememberChoice called`);
-
-    if (!playerInstanceRef.current) {
-      console.log(`[VideoPlayer] Player not ready yet, can't enable sound`);
-      return;
-    }
+    if (!playerInstanceRef.current) return;
 
     // Store the user's choice in sessionStorage for future videos
     sessionStorage.setItem("videoPlayerUnmuted", "true");
 
     // Unmute directly without changing state that would cause re-renders
-    console.log(`[VideoPlayer] Unmuting player directly`);
     playerInstanceRef.current.unMute();
 
-    // Only update our local state after directly handling the player
     // Use a setTimeout to avoid immediate re-renders that could trigger the useEffect
     setTimeout(() => {
       setIsMuted(false);
@@ -152,15 +144,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Load YouTube API and set up player
   useEffect(() => {
-    console.log(`[VideoPlayer] Setting up YouTube API`);
-
     // Check if user previously unmuted videos in this session
     const previouslyUnmuted =
       sessionStorage.getItem("videoPlayerUnmuted") === "true";
     if (previouslyUnmuted) {
-      console.log(
-        `[VideoPlayer] User previously unmuted videos, applying that preference`
-      );
       setIsMuted(false);
       setShowPlayButton(false);
     }
@@ -174,18 +161,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
 
       window.onYouTubeIframeAPIReady = () => {
-        console.log(`[VideoPlayer] YouTube API ready`);
         setPlayerReady(true);
       };
     } else if (window.YT && window.YT.Player) {
-      console.log(`[VideoPlayer] YouTube API already loaded`);
       setPlayerReady(true);
     }
 
     // Clean up function
     return () => {
       if (playerInstanceRef.current) {
-        console.log(`[VideoPlayer] Cleaning up player on unmount`);
         playerInstanceRef.current.destroy();
         playerInstanceRef.current = null;
       }
@@ -196,13 +180,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     if (!playerReady || !playerContainerRef.current || !videoId) return;
 
-    console.log(`[VideoPlayer] Handling video ID change: ${videoId}`);
-    console.log(
-      `[VideoPlayer] Current mute state: ${isMuted ? "muted" : "unmuted"}`
-    );
-
     const createNewPlayer = () => {
-      console.log(`[VideoPlayer] Creating new player instance`);
       setIsLoading(true);
 
       // Create unique ID for player element
@@ -216,11 +194,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       // Always start with muted=1 for mobile autoplay
       const shouldMute = isMobile && isMuted;
-      console.log(
-        `[VideoPlayer] Initial player mute setting: ${
-          shouldMute ? "muted" : "unmuted"
-        }`
-      );
 
       // Initialize the player
       playerInstanceRef.current = new window.YT.Player(playerId, {
@@ -240,12 +213,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         },
         events: {
           onReady: (event) => {
-            console.log(`[VideoPlayer] Player ready event`);
             setIsLoading(false);
 
             // Apply mute state based on user preference
             if (!isMuted) {
-              console.log(`[VideoPlayer] Unmuting player on ready`);
               event.target.unMute();
             }
 
@@ -253,29 +224,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             event.target.playVideo();
           },
           onStateChange: (event) => {
-            // Log the state changes for debugging
-            const stateNames: Record<number, string> = {
-              [-1]: "UNSTARTED",
-              0: "ENDED",
-              1: "PLAYING",
-              2: "PAUSED",
-              3: "BUFFERING",
-              5: "CUED",
-            };
-            console.log(
-              `[VideoPlayer] State: ${stateNames[event.data] || event.data}`
-            );
-
             // When the video ends, call the callback
             if (event.data === PlayerState.ENDED && onEnded) {
-              console.log(
-                `[VideoPlayer] Video ended, calling onEnded callback`
-              );
               onEnded();
             }
           },
           onError: (event) => {
-            console.error(`[VideoPlayer] YouTube player error: ${event.data}`);
             setIsLoading(false);
           },
         },
@@ -283,9 +237,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
 
     const loadVideoInExistingPlayer = () => {
-      console.log(
-        `[VideoPlayer] Loading new video in existing player: ${videoId}`
-      );
       setIsLoading(true);
 
       if (playerInstanceRef.current) {
@@ -321,10 +272,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     // Only handle mute state changes if player already exists
     if (playerInstanceRef.current) {
-      console.log(
-        `[VideoPlayer] Mute state changed to: ${isMuted ? "muted" : "unmuted"}`
-      );
-
       if (isMuted) {
         playerInstanceRef.current.mute();
       } else {
