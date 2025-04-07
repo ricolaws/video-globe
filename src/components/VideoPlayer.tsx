@@ -10,7 +10,6 @@ interface VideoPlayerProps {
   video: Video;
 }
 
-// Define proper YouTube Player API types
 interface YouTubeEvent {
   data: number;
   target: YouTubePlayer;
@@ -74,7 +73,6 @@ const PlayerState = {
   CUED: 5,
 };
 
-// Define type for YouTube API
 declare global {
   interface Window {
     YT: {
@@ -88,7 +86,6 @@ declare global {
   }
 }
 
-// Define aspect ratio types
 type AspectRatioType = "landscape" | "portrait" | "square";
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -100,8 +97,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [playerReady, setPlayerReady] = useState(false);
   const playerInstanceRef = useRef<YouTubePlayer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Separate state for mute control
   const [isMuted, setIsMuted] = useState(true);
   const [showPlayButton, setShowPlayButton] = useState(true);
 
@@ -126,16 +121,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const aspectRatioType = getAspectRatioType();
 
   // Function to handle unmuting that won't trigger re-renders of the component
-  const enableSoundAndRememberChoice = useCallback(() => {
-    if (!playerInstanceRef.current) return;
+  const enableSoundForSession = useCallback(() => {
+    if (
+      !playerInstanceRef.current ||
+      typeof playerInstanceRef.current.unMute !== "function"
+    )
+      return;
 
     // Store the user's choice in sessionStorage for future videos
     sessionStorage.setItem("videoPlayerUnmuted", "true");
 
-    // Unmute directly without changing state that would cause re-renders
     playerInstanceRef.current.unMute();
 
-    // Use a setTimeout to avoid immediate re-renders that could trigger the useEffect
     setTimeout(() => {
       setIsMuted(false);
       setShowPlayButton(false);
@@ -214,14 +211,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         events: {
           onReady: (event) => {
             setIsLoading(false);
+            if (event.target && typeof event.target.playVideo === "function") {
+              // Apply mute state based on user preference
+              if (!isMuted && typeof event.target.unMute === "function") {
+                event.target.unMute();
+              }
 
-            // Apply mute state based on user preference
-            if (!isMuted) {
-              event.target.unMute();
+              event.target.playVideo();
             }
-
-            // Start playing
-            event.target.playVideo();
           },
           onStateChange: (event) => {
             // When the video ends, call the callback
@@ -229,7 +226,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               onEnded();
             }
           },
-          onError: (event) => {
+          onError: () => {
             setIsLoading(false);
           },
         },
@@ -239,15 +236,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const loadVideoInExistingPlayer = () => {
       setIsLoading(true);
 
-      if (playerInstanceRef.current) {
-        // Stop current video
-        playerInstanceRef.current.stopVideo();
+      if (
+        playerInstanceRef.current &&
+        typeof playerInstanceRef.current.loadVideoById === "function"
+      ) {
+        if (typeof playerInstanceRef.current.stopVideo === "function") {
+          playerInstanceRef.current.stopVideo();
+        }
 
         // Apply mute state from component state
         if (isMuted) {
-          playerInstanceRef.current.mute();
+          if (typeof playerInstanceRef.current.mute === "function") {
+            playerInstanceRef.current.mute();
+          }
         } else {
-          playerInstanceRef.current.unMute();
+          if (typeof playerInstanceRef.current.unMute === "function") {
+            playerInstanceRef.current.unMute();
+          }
         }
 
         // Load and play the new video
@@ -257,21 +262,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         });
 
         setIsLoading(false);
+      } else {
+        // If player reference exists but methods don't, recreate the player
+        createNewPlayer();
       }
     };
 
-    // Either create a new player or use the existing one
     if (!playerInstanceRef.current) {
       createNewPlayer();
     } else {
       loadVideoInExistingPlayer();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, playerReady, isMobile, onEnded]); // Removed isMuted from dependency array
 
   // Separate effect to handle mute state changes
   useEffect(() => {
-    // Only handle mute state changes if player already exists
-    if (playerInstanceRef.current) {
+    if (
+      playerInstanceRef.current &&
+      typeof playerInstanceRef.current.unMute === "function"
+    ) {
       if (isMuted) {
         playerInstanceRef.current.mute();
       } else {
@@ -280,7 +290,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [isMuted]);
 
-  // Apply CSS classes based on the detected aspect ratio
   const containerClassName = `video-player-container video-player-${aspectRatioType}`;
 
   return (
@@ -295,12 +304,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       {/* Play button - only shown if muted and on mobile */}
       {playerReady && !isLoading && showPlayButton && isMuted && isMobile && (
         <button
-          onClick={enableSoundAndRememberChoice}
+          onClick={enableSoundForSession}
           className="play-sound-button"
           aria-label="Play with sound"
         >
           <div className="play-icon-circle">
-            <UnMuteIcon size={24} color="#ffffff" />
+            <UnMuteIcon size={24} color="#ebebeb" />
           </div>
           <span>Play with sound</span>
         </button>
