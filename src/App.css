@@ -156,7 +156,7 @@ html {
 }
 
 /* Globe toggle button */
-.globe-toggle-button {
+/* .globe-toggle-button {
   position: absolute;
   top: 20px;
   right: 20px;
@@ -173,7 +173,7 @@ html {
 .globe-toggle-button:hover {
   color: #ebebeb;
   text-shadow: 0 0 5px rgba(255, 233, 107, 0.3);
-}
+} */
 
 /* Media query for smaller screens */
 @media (max-width: 768px) {

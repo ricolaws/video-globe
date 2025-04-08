@@ -1,0 +1,143 @@
+.settings-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 191;
+}
+
+.settings-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.settings-icon-wrapper:hover {
+  transform: rotate(30deg);
+}
+
+.settings-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background-color: rgba(14, 14, 19, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  min-width: 240px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-header h3 {
+  margin: 0;
+  color: #ebebeb;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.settings-content {
+  padding: 16px;
+}
+
+.settings-option {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-option span {
+  color: #ebebeb;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Toggle styles using buttons */
+.toggle-switch-container {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.style-button {
+  padding: 5px 10px;
+  font-size: 12px;
+  background-color: transparent;
+  color: #ebebeb;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  flex: 1;
+  text-align: center;
+}
+
+.style-button:first-child {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.style-button.active {
+  background-color: #0120a8;
+  color: white;
+}
+
+.style-button:hover:not(.active) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .settings-container {
+    top: 15px;
+    right: 15px;
+  }
+
+  .settings-panel {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-container {
+    top: 10px;
+    right: 10px;
+  }
+
+  .settings-icon-wrapper svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .settings-panel {
+    min-width: 180px;
+  }
+
+  .settings-header h3 {
+    font-size: 14px;
+  }
+
+  .settings-option label {
+    font-size: 12px;
+  }
+}

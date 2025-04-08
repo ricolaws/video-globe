@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import VideoPlayer from "./VideoPlayer";
 import { Video } from "../services/youTubeService";
 import "./VideoComponents.css";
+import ChevronIcon from "./ChevronIcon";
+import CloseIcon from "./CloseIcon";
 
 interface VideoControllerProps {
   videos: Video[];
@@ -85,21 +87,30 @@ const VideoController: React.FC<VideoControllerProps> = ({
         {/* Controls placed below the video */}
         <div className="bottom-video-controls">
           <button
-            className="arrow-button left-arrow"
+            className="arrow-button"
             onClick={handlePrevious}
             disabled={currentIndex === 0}
             aria-label="Previous video"
           >
-            ←
+            <ChevronIcon direction="left" size={28} />
+          </button>
+
+          {/* Close button with SVG icon */}
+          <button
+            className="arrow-button"
+            onClick={onClose}
+            aria-label="Close modal"
+          >
+            <CloseIcon size={28} />
           </button>
 
           <button
-            className="arrow-button right-arrow"
+            className="arrow-button"
             onClick={handleNext}
             disabled={currentIndex === videos.length - 1 && !hasMore}
             aria-label="Next video"
           >
-            →
+            <ChevronIcon direction="right" size={28} />
           </button>
         </div>
       </div>

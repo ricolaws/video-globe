@@ -4,6 +4,7 @@ import GlobeSelector from "./components/GlobeSelector";
 import VideoController from "./components/VideoController";
 import SearchInfo from "./components/SearchInfo";
 import LoadingScreen from "./components/LoadingScreen";
+import SettingsMenu from "./components/SettingsMenu";
 import useYouTubeAPI from "./hooks/useYouTubeAPI";
 import "./App.css";
 import "./components/LoadingScreen.css";
@@ -68,10 +69,11 @@ function App() {
       {/* SearchInfo component */}
       <SearchInfo coords={coords} currentVideo={currentVideo} />
 
-      {/* Toggle Button for Globe Style - Outside Canvas */}
-      <button className="globe-toggle-button" onClick={toggleGlobeStyle}>
-        Switch to {useRealisticGlobe ? "Simple" : "Realistic"} Globe
-      </button>
+      {/* Settings Menu - Replaced toggle button */}
+      <SettingsMenu
+        useRealisticGlobe={useRealisticGlobe}
+        toggleGlobeStyle={toggleGlobeStyle}
+      />
 
       {isLoading && <div className="loading-indicator">Loading videos...</div>}
       {error && <div className="error-message">{error}</div>}

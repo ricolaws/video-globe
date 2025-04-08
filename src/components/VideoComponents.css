@@ -125,34 +125,68 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: transparent;
   color: #ebebeb;
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  border: none;
   border-radius: 50%;
   width: 54px;
   height: 54px;
-  font-size: 28px;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.arrow-button::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  z-index: -1;
 }
 
 .arrow-button:hover {
-  background-color: var(--blue-screen);
+  transform: scale(1.1);
+}
+
+.arrow-button:hover::before {
+  opacity: 1;
+}
+
+.arrow-button:active {
+  transform: scale(0.95);
 }
 
 .arrow-button:disabled {
   background-color: rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.4);
   cursor: not-allowed;
   opacity: 0.5;
+  transform: none;
+  box-shadow: none;
 }
 
-.left-arrow,
-.right-arrow {
-  padding: 0;
-  line-height: 1;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .arrow-button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Additional responsive adjustments for very small screens */
+@media (max-width: 480px) {
+  .arrow-button {
+    width: 40px;
+    height: 40px;
+  }
 }
 
 .loading-indicator {
