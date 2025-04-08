@@ -3,93 +3,75 @@ import "./LoadingScreen.css";
 
 interface LoadingScreenProps {
   onLoadingComplete?: () => void;
-  minDisplayTime?: number; // Minimum time to show the loading screen (ms)
+  minDisplayTime?: number;
 }
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({
   onLoadingComplete,
-  minDisplayTime = 2000, // Default minimum display time is 2 seconds
+  minDisplayTime = 2000,
 }) => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isReady, setIsReady] = useState(false);
-  const [startFadeOut, setStartFadeOut] = useState(false);
-  const [loadingStartTime] = useState(Date.now());
+  const [visible, setVisible] = useState(true);
+  const [fading, setFading] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [appLoaded, setAppLoaded] = useState(false);
 
-  // Monitor document loading state
+  // Track minimum display time
   useEffect(() => {
-    const checkReadyState = () => {
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, minDisplayTime);
+
+    return () => clearTimeout(timer);
+  }, [minDisplayTime]);
+
+  // Track when the app is loaded
+  useEffect(() => {
+    const checkLoaded = () => {
       if (document.readyState === "complete") {
-        // Calculate how long the page has been loading
-        const currentTime = Date.now();
-        const elapsedTime = currentTime - loadingStartTime;
-
-        // If we've already exceeded the minimum time, mark as ready immediately
-        if (elapsedTime >= minDisplayTime) {
-          setIsReady(true);
-
-          // Start fade-out animation after a short delay
-          setTimeout(() => {
-            setStartFadeOut(true);
-          }, 1000); // Show "READY" message for 1 second before fading
-        } else {
-          // Otherwise, wait until the minimum time has passed
-          const remainingTime = minDisplayTime - elapsedTime;
-
-          // Set ready state after the remaining time
-          setTimeout(() => {
-            setIsReady(true);
-
-            // Start fade-out animation after a short delay
-            setTimeout(() => {
-              setStartFadeOut(true);
-            }, 1000); // Show "READY" message for 1 second before fading
-          }, remainingTime);
-        }
+        setAppLoaded(true);
       }
     };
 
     // Check initial state
-    checkReadyState();
+    checkLoaded();
 
-    // Set up event listeners for document loading states
-    const handleReadyStateChange = () => checkReadyState();
-    document.addEventListener("readystatechange", handleReadyStateChange);
+    // Set up event listener for document loading state
+    window.addEventListener("load", checkLoaded);
+    document.addEventListener("readystatechange", checkLoaded);
 
     return () => {
-      document.removeEventListener("readystatechange", handleReadyStateChange);
+      window.removeEventListener("load", checkLoaded);
+      document.removeEventListener("readystatechange", checkLoaded);
     };
-  }, [loadingStartTime, minDisplayTime]);
+  }, []);
 
-  // Handle fade-out completion
+  // Handle fade out when both conditions are met
   useEffect(() => {
-    if (startFadeOut) {
-      const fadeOutTimer = setTimeout(() => {
-        setIsVisible(false);
+    if (minTimeElapsed && appLoaded && !fading) {
+      // Start the fade out
+      setFading(true);
+
+      // After the CSS transition completes, remove from DOM
+      setTimeout(() => {
+        setVisible(false);
+
+        // Call completion handler
         if (onLoadingComplete) {
           onLoadingComplete();
         }
-      }, 600); // Match this with the CSS transition duration
-
-      return () => clearTimeout(fadeOutTimer);
+      }, 600); // Match with CSS transition time (0.6s)
     }
-  }, [startFadeOut, onLoadingComplete]);
+  }, [minTimeElapsed, appLoaded, fading, onLoadingComplete]);
 
-  if (!isVisible) return null;
+  if (!visible) return null;
 
   return (
-    <div className={`loading-screen ${startFadeOut ? "fade-out" : ""}`}>
+    <div className={`loading-screen ${fading ? "fade-out" : ""}`}>
       <div className="loading-container">
         <div className="globe-container">
-          {/* Outer spinner ring */}
           <div className="spinner-ring outer-ring"></div>
-
-          {/* Middle spinner ring */}
           <div className="spinner-ring middle-ring"></div>
-
-          {/* Inner spinner ring */}
           <div className="spinner-ring inner-ring"></div>
-
-          {/* Globe icon */}
           <div className="globe-icon">
             <svg
               width="100"
@@ -105,11 +87,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
             </svg>
           </div>
         </div>
-
-        {/* Dynamic text that changes when ready */}
-        <div className="loading-text">
-          {isReady ? "VIDEO GLOBE READY" : "VIDEO GLOBE LOADING"}
-        </div>
+        <div className="loading-text">VIDEO GLOBE LOADING</div>
       </div>
     </div>
   );

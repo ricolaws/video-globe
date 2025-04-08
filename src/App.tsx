@@ -78,7 +78,11 @@ function App() {
       {isLoading && <div className="loading-indicator">Loading videos...</div>}
       {error && <div className="error-message">{error}</div>}
 
-      <Canvas className="globe-canvas">
+      <Canvas
+        className={`globe-canvas ${
+          !useRealisticGlobe ? "simple-globe-bg" : ""
+        }`}
+      >
         <GlobeSelector
           setCoords={handleGlobeClick}
           useRealistic={useRealisticGlobe}

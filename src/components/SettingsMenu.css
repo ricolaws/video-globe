@@ -3,6 +3,7 @@
   top: 20px;
   right: 20px;
   z-index: 191;
+  font-family: "Space Mono", monospace;
 }
 
 .settings-icon-wrapper {
@@ -19,7 +20,7 @@
 
 .settings-panel {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 20px);
   right: 0;
   background-color: rgba(14, 14, 19, 0.85);
   backdrop-filter: blur(10px);
@@ -59,7 +60,7 @@
 }
 
 .settings-option {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -91,6 +92,7 @@
   outline: none;
   flex: 1;
   text-align: center;
+  font-family: "Space Mono", monospace;
 }
 
 .style-button:first-child {
@@ -98,7 +100,7 @@
 }
 
 .style-button.active {
-  background-color: #0120a8;
+  background-color: var(--blue-screen);
   color: white;
 }
 
@@ -115,6 +117,12 @@
 
   .settings-panel {
     min-width: 200px;
+  }
+  .settings-header h3 {
+    font-size: 14px;
+  }
+  .settings-option span {
+    font-size: 12px;
   }
 }
 
@@ -134,10 +142,12 @@
   }
 
   .settings-header h3 {
-    font-size: 14px;
+    font-size: 12px;
   }
-
-  .settings-option label {
+  .settings-option {
+    margin-bottom: 6px;
+  }
+  .settings-option span {
     font-size: 12px;
   }
 }
